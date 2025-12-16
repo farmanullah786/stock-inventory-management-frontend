@@ -4,7 +4,7 @@ export const appConfig = {
   title: "Stock In & Out Inventory Management System",
   description: "Inventory management system for stock tracking",
   api: {
-    baseUrl: env.VITE_API_BASE_URL,
+    baseUrl: env.VITE_APP_BASE_URL + "/api" || "http://localhost:5000/api",
     timeout: 30000,
   },
   auth: {
