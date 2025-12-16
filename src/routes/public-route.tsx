@@ -1,0 +1,18 @@
+import { Navigate } from "react-router-dom";
+import { useUser } from "@/store/use-user-store";
+import { routesConfig } from "@/config/routes-config";
+
+interface PublicRouteProps {
+  children: React.ReactNode;
+}
+
+export function PublicRoute({ children }: PublicRouteProps) {
+  const { isAuthenticated } = useUser();
+
+  if (isAuthenticated) {
+    return <Navigate to={routesConfig.app.dashboard} replace />;
+  }
+
+  return <>{children}</>;
+}
+
