@@ -1,10 +1,10 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+import { env } from "./env";
 
 export const appConfig = {
   title: "Stock In & Out Inventory Management System",
   description: "Inventory management system for stock tracking",
   api: {
-    baseUrl: API_BASE_URL,
+    baseUrl: env.VITE_API_BASE_URL,
     timeout: 30000,
   },
   auth: {

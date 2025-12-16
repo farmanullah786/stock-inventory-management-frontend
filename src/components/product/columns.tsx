@@ -18,6 +18,7 @@ import { ProductFormData } from "@/schemas/product-schema";
 import { DeleteProductAlert } from "./delete-product-alert";
 import { IDialogType } from "@/types";
 import { useState } from "react";
+import { TruncatedText } from "../shared/truncated-text";
 
 export const createProductColumns = (): ColumnDef<IProduct>[] => [
   {
@@ -27,7 +28,11 @@ export const createProductColumns = (): ColumnDef<IProduct>[] => [
         <DataTableColumnHeader column={column} title="Name" />
       </div>
     ),
-    cell: ({ row }) => <div className="text-left">{row.original.name}</div>,
+    cell: ({ row }) => (
+      <div className="text-left">
+        <TruncatedText text={row.original.name} maxLength={30} />
+      </div>
+    ),
     size: 200,
     minSize: 150,
     maxSize: 300,
