@@ -30,7 +30,7 @@ const StockSummary = () => {
   const { searchParams, setSearchParams, queryOptions } = usePaginationQuery();
 
   const {
-    data,
+    data: stockSummaryData,
     isPending,
     isFetching,
     isSuccess,
@@ -38,14 +38,16 @@ const StockSummary = () => {
     error,
   } = useFetchStockSummary(queryOptions);
 
-  // Adapt current backend response to paginated format
-  const summary = isSuccess ? data?.data || [] : [];
-  const rowCount = isSuccess ? data?.count || summary.length : 0;
+  const summary = isSuccess ? stockSummaryData.data : [];
+  const rowCount = isSuccess ? stockSummaryData.pagination.rowCount : 0;
 
   // Calculate totals for total row
   const totals = useMemo(() => {
     return summary.reduce(
-      (acc: { totalIn: number; totalOut: number; availableStock: number }, item: IStockSummary) => {
+      (
+        acc: { totalIn: number; totalOut: number; availableStock: number },
+        item: IStockSummary
+      ) => {
         acc.totalIn += item.totalIn || 0;
         acc.totalOut += item.totalOut || 0;
         acc.availableStock += item.availableStock || 0;
@@ -196,7 +198,6 @@ const StockSummary = () => {
       />
       <Container>
         <div className="space-y-6">
-          {/* 🟢 1. FILTER SECTION (TOP - MUST HAVE) */}
           <StockSummary.Filters />
 
           <Loader isPending={isPending} className="py-8" />
@@ -247,11 +248,11 @@ const StockSummary = () => {
 };
 
 StockSummary.Filters = () => {
-  const { data: categoriesData } = useFetchCategories({
+  const categoriesQuery = useFetchCategories({
     isActive: true,
     limit: 1000,
   });
-  const categories = categoriesData?.data || [];
+  const categories = categoriesQuery.isSuccess ? categoriesQuery.data.data : [];
 
   return (
     <FilterCard>

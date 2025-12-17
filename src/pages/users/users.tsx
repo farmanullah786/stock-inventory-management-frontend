@@ -1,14 +1,11 @@
 import { useFetchUsers } from "@/hooks/use-user";
-import { Button } from "@/components/ui/button";
 import { ServerDataTable } from "@/components/shared/data-table/server-data-table";
 import { columns } from "@/components/user/columns";
 import { usePaginationQuery } from "@/hooks/use-pagination-query";
 import Loader from "@/components/ui/loader";
 import { PageHeader } from "@/components/shared/page-header";
 import { Container } from "@/components/shared/container";
-import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { UserForm } from "@/components/user/user-form-dialog";
-import { Plus } from "lucide-react";
 import { ErrorDisplay } from "@/components/shared/error-display";
 import { FilterCard } from "@/components/shared/filter-card";
 import { SearchInput } from "@/components/shared/search-input";
@@ -18,14 +15,8 @@ import { UserStatusSelect } from "@/components/shared/user-status-select";
 const Users = () => {
   const { searchParams, setSearchParams, queryOptions } = usePaginationQuery();
 
-  const {
-    data,
-    isPending,
-    isFetching,
-    isSuccess,
-    isError,
-    error,
-  } = useFetchUsers(queryOptions);
+  const { data, isPending, isFetching, isSuccess, isError, error } =
+    useFetchUsers(queryOptions);
 
   if (isError) {
     return (
@@ -42,9 +33,6 @@ const Users = () => {
     );
   }
 
-  const users = isSuccess ? data?.data || [] : [];
-  const rowCount = isSuccess ? data?.pagination?.rowCount || users.length : 0;
-
   return (
     <>
       <Header />
@@ -56,10 +44,10 @@ const Users = () => {
           {isSuccess && (
             <ServerDataTable
               columns={columns}
-              data={users}
+              data={data.data}
               searchParams={searchParams}
               setSearchParams={setSearchParams}
-              rowCount={rowCount}
+              rowCount={data.pagination.rowCount}
               isFetching={isFetching && !isPending}
             />
           )}
@@ -92,4 +80,3 @@ const Header = () => {
 };
 
 export default Users;
-

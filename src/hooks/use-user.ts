@@ -1,5 +1,6 @@
 import { QueryParams } from "@/types";
 import {
+  keepPreviousData,
   useMutation,
   useQuery,
   useQueryClient,
@@ -24,6 +25,7 @@ export const useFetchUsers = (queryOptions: QueryParams) =>
   useQuery({
     queryKey: userKeys.list(queryOptions),
     queryFn: userServices.fetchUsers,
+    placeholderData: keepPreviousData,
   });
 
 export const useFetchUserById = (id: number) =>

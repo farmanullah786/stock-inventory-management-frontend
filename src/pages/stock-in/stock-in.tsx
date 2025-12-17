@@ -1,51 +1,46 @@
-import { useMemo } from 'react';
-import {
-  useFetchStockInRecords,
-} from '@/hooks/use-stock-in';
-import { useFetchProducts } from '@/hooks/use-products';
-import { useFetchUsers } from '@/hooks/use-user';
-import { useUser } from '@/store/use-user-store';
-import StockInFormDialog from '../../components/stock-in-form/stock-in-form';
-import { canModifyInventory } from '@/lib/utils';
-import { createStockInColumns } from '@/components/stock-in/columns';
-import { usePaginationQuery } from '@/hooks/use-pagination-query';
-import { PageHeader } from '@/components/shared/page-header';
-import { FilterCard } from '@/components/shared/filter-card';
-import { SearchInput } from '@/components/shared/search-input';
-import { ProductFilter } from '@/components/shared/product-filter';
-import { DateRangeFilter } from '@/components/shared/date-range-filter';
-import { Container } from '@/components/shared/container';
-import Loader from '@/components/ui/loader';
-import { ServerDataTable } from '@/components/shared/data-table/server-data-table';
-import { ErrorDisplay } from '@/components/shared/error-display';
-import { IProduct, IUser } from '@/types/api';
+import { useMemo } from "react";
+import { useFetchStockInRecords } from "@/hooks/use-stock-in";
+import { useFetchProducts } from "@/hooks/use-products";
+import { useFetchUsers } from "@/hooks/use-user";
+import { useUser } from "@/store/use-user-store";
+import StockInFormDialog from "../../components/stock-in-form/stock-in-form";
+import { canModifyInventory } from "@/lib/utils";
+import { createStockInColumns } from "@/components/stock-in/columns";
+import { usePaginationQuery } from "@/hooks/use-pagination-query";
+import { PageHeader } from "@/components/shared/page-header";
+import { FilterCard } from "@/components/shared/filter-card";
+import { SearchInput } from "@/components/shared/search-input";
+import { ProductFilter } from "@/components/shared/product-filter";
+import { DateRangeFilter } from "@/components/shared/date-range-filter";
+import { Container } from "@/components/shared/container";
+import Loader from "@/components/ui/loader";
+import { ServerDataTable } from "@/components/shared/data-table/server-data-table";
+import { ErrorDisplay } from "@/components/shared/error-display";
+import { IProduct, IUser } from "@/types/api";
 
 const StockIn = () => {
   const { searchParams, setSearchParams, queryOptions } = usePaginationQuery();
   const { user } = useUser();
 
   const {
-    data: stockInData,
+    data: stockInRecords,
     isPending,
     isFetching,
     isSuccess,
     isError,
     error,
   } = useFetchStockInRecords(queryOptions);
-  const { data: productsData } = useFetchProducts();
-  const { data: usersData } = useFetchUsers({ page: 1, limit: 1000 });
+  const productsQuery = useFetchProducts();
+  const usersQuery = useFetchUsers({ page: 1, limit: 1000 });
 
-  // Adapt current backend response to paginated format
-  const stockInRecords = isSuccess ? (stockInData?.data || []) : [];
-  const rowCount = isSuccess ? (stockInData?.pagination?.rowCount || stockInRecords.length) : 0;
+  // Extract data arrays once
+  const products = productsQuery.isSuccess ? productsQuery.data.data : [];
+  const users = usersQuery.isSuccess ? usersQuery.data.data : [];
 
   const columns = useMemo(
-    () => createStockInColumns(productsData?.data || [], usersData?.data || [], user?.role),
-    [productsData?.data, usersData?.data, user?.role]
+    () => createStockInColumns(products, users, user.role),
+    [products, users, user.role]
   );
-
-  const products = productsData?.data || [];
-  const users = usersData?.data || [];
 
   if (isError) {
     return (
@@ -72,10 +67,10 @@ const StockIn = () => {
           {isSuccess && (
             <ServerDataTable
               columns={columns}
-              data={stockInRecords}
+              data={stockInRecords.data}
               searchParams={searchParams}
               setSearchParams={setSearchParams}
-              rowCount={rowCount}
+              rowCount={stockInRecords.pagination.rowCount || 0}
               isFetching={isFetching && !isPending}
             />
           )}
@@ -95,7 +90,13 @@ StockIn.Filters = ({ products }: { products: IProduct[] }) => {
   );
 };
 
-const Header = ({ products, users }: { products: IProduct[]; users: IUser[] }) => {
+const Header = ({
+  products,
+  users,
+}: {
+  products: IProduct[];
+  users: IUser[];
+}) => {
   const { user } = useUser();
   return (
     <PageHeader
@@ -119,4 +120,3 @@ const Header = ({ products, users }: { products: IProduct[]; users: IUser[] }) =
 };
 
 export default StockIn;
-

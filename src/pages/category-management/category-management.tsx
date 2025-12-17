@@ -17,23 +17,11 @@ import { ErrorDisplay } from "@/components/shared/error-display";
 const CategoryManagement = () => {
   const { searchParams, setSearchParams, queryOptions } = usePaginationQuery();
 
-  const {
-    data,
-    isPending,
-    isFetching,
-    isSuccess,
-    isError,
-    error,
-  } = useFetchCategories(queryOptions);
-
-  // Adapt current backend response to paginated format
-  const categories = isSuccess ? data?.data || [] : [];
-  const rowCount = isSuccess
-    ? data?.pagination?.rowCount || categories.length
-    : 0;
+  const { data, isPending, isFetching, isSuccess, isError, error } =
+    useFetchCategories(queryOptions);
 
   const { user } = useUser();
-  const columns = useMemo(() => createCategoryColumns(user?.role), [user?.role]);
+  const columns = useMemo(() => createCategoryColumns(user.role), [user.role]);
 
   if (isError) {
     return (
@@ -60,10 +48,10 @@ const CategoryManagement = () => {
           {isSuccess && (
             <ServerDataTable
               columns={columns}
-              data={categories}
+              data={data.data}
               searchParams={searchParams}
               setSearchParams={setSearchParams}
-              rowCount={rowCount}
+              rowCount={data.pagination.rowCount}
               isFetching={isFetching && !isPending}
             />
           )}

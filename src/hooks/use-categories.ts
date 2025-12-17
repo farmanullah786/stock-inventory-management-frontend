@@ -1,5 +1,6 @@
 import { QueryParams } from "@/types";
 import {
+  keepPreviousData,
   useMutation,
   useQuery,
   useQueryClient,
@@ -22,6 +23,7 @@ export const useFetchCategories = (queryOptions?: QueryParams) =>
   useQuery({
     queryKey: categoryKeys.list(queryOptions),
     queryFn: categoryServices.fetchCategories,
+    placeholderData: keepPreviousData,
   });
 
 export const useFetchCategoryById = (id: number) =>
@@ -75,4 +77,3 @@ export const useDeleteCategory = () => {
     },
   });
 };
-
