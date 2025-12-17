@@ -105,7 +105,10 @@ const StockSummary = () => {
               isFetching={isFetching && !isPending}
               footer={
                 summary.length > 0 ? (
-                  <TableRow>
+                  <TableRow className="bg-bg-gray font-semibold">
+                    <TableCell className="text-text text-center">
+                      -
+                    </TableCell>
                     <TableCell className="font-bold text-text text-left">
                       TOTAL
                     </TableCell>
