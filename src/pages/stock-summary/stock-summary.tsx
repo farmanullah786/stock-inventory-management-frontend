@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import { ServerDataTable } from "@/components/shared/data-table/server-data-table";
 import { stockSummaryColumns } from "@/components/stock-summary/columns";
 import { usePaginationQuery } from "@/hooks/use-pagination-query";
-import Loader from "@/components/ui/loader";
 import AppHeader from "@/layouts/app-header";
+import { TableSkeleton } from "@/components/shared/table-skeleton";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -199,9 +199,9 @@ const StockSummary = () => {
       <Container>
         <div className="space-y-6">
           <StockSummary.Filters />
-
-          <Loader isPending={isPending} className="py-8" />
-          {isSuccess && (
+          {isPending ? (
+            <TableSkeleton columnCount={stockSummaryColumns.length} rowCount={10} />
+          ) : isSuccess ? (
             <ServerDataTable
               columns={stockSummaryColumns}
               data={summary}
@@ -240,7 +240,7 @@ const StockSummary = () => {
                 ) : undefined
               }
             />
-          )}
+          ) : null}
         </div>
       </Container>
     </>

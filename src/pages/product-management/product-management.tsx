@@ -13,9 +13,9 @@ import { SearchInput } from "@/components/shared/search-input";
 import { StatusSelect } from "@/components/shared/status-select";
 import { CategoryFilter } from "@/components/shared/category-filter";
 import { Container } from "@/components/shared/container";
-import Loader from "@/components/ui/loader";
 import { ServerDataTable } from "@/components/shared/data-table/server-data-table";
 import { ErrorDisplay } from "@/components/shared/error-display";
+import { TableSkeleton } from "@/components/shared/table-skeleton";
 
 const ProductManagement = () => {
   const { searchParams, setSearchParams, queryOptions } = usePaginationQuery();
@@ -54,8 +54,9 @@ const ProductManagement = () => {
           <ProductManagement.Filters
             categories={categories.isSuccess ? categories.data.data : []}
           />
-          <Loader isPending={isPending} className="py-8" />
-          {isSuccess && (
+          {isPending ? (
+            <TableSkeleton columnCount={columns.length} rowCount={10} />
+          ) : isSuccess ? (
             <ServerDataTable
               columns={columns}
               data={data.data}
@@ -64,7 +65,7 @@ const ProductManagement = () => {
               rowCount={data.pagination.rowCount}
               isFetching={isFetching && !isPending}
             />
-          )}
+          ) : null}
         </div>
       </Container>
     </>

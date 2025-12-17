@@ -10,9 +10,9 @@ import { FilterCard } from "@/components/shared/filter-card";
 import { SearchInput } from "@/components/shared/search-input";
 import { StatusSelect } from "@/components/shared/status-select";
 import { Container } from "@/components/shared/container";
-import Loader from "@/components/ui/loader";
 import { ServerDataTable } from "@/components/shared/data-table/server-data-table";
 import { ErrorDisplay } from "@/components/shared/error-display";
+import { TableSkeleton } from "@/components/shared/table-skeleton";
 
 const CategoryManagement = () => {
   const { searchParams, setSearchParams, queryOptions } = usePaginationQuery();
@@ -44,8 +44,9 @@ const CategoryManagement = () => {
       <Container>
         <div className="space-y-6">
           <CategoryManagement.Filters />
-          <Loader isPending={isPending} className="py-8" />
-          {isSuccess && (
+          {isPending ? (
+            <TableSkeleton columnCount={columns.length} rowCount={10} />
+          ) : isSuccess ? (
             <ServerDataTable
               columns={columns}
               data={data.data}
@@ -54,7 +55,7 @@ const CategoryManagement = () => {
               rowCount={data.pagination.rowCount}
               isFetching={isFetching && !isPending}
             />
-          )}
+          ) : null}
         </div>
       </Container>
     </>

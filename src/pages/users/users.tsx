@@ -2,7 +2,6 @@ import { useFetchUsers } from "@/hooks/use-user";
 import { ServerDataTable } from "@/components/shared/data-table/server-data-table";
 import { columns } from "@/components/user/columns";
 import { usePaginationQuery } from "@/hooks/use-pagination-query";
-import Loader from "@/components/ui/loader";
 import { PageHeader } from "@/components/shared/page-header";
 import { Container } from "@/components/shared/container";
 import { UserForm } from "@/components/user/user-form-dialog";
@@ -11,6 +10,7 @@ import { FilterCard } from "@/components/shared/filter-card";
 import { SearchInput } from "@/components/shared/search-input";
 import { RoleSelect } from "@/components/shared/role-select";
 import { UserStatusSelect } from "@/components/shared/user-status-select";
+import { TableSkeleton } from "@/components/shared/table-skeleton";
 
 const Users = () => {
   const { searchParams, setSearchParams, queryOptions } = usePaginationQuery();
@@ -39,9 +39,9 @@ const Users = () => {
       <Container>
         <div className="space-y-6">
           <Users.Filters />
-
-          <Loader isPending={isPending} className="py-8" />
-          {isSuccess && (
+          {isPending ? (
+            <TableSkeleton columnCount={columns.length} rowCount={10} />
+          ) : isSuccess ? (
             <ServerDataTable
               columns={columns}
               data={data.data}
@@ -50,7 +50,7 @@ const Users = () => {
               rowCount={data.pagination.rowCount}
               isFetching={isFetching && !isPending}
             />
-          )}
+          ) : null}
         </div>
       </Container>
     </>
