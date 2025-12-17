@@ -25,7 +25,7 @@ import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useLocation, Link } from "react-router-dom";
 import { useUser } from "@/store/use-user-store";
 import LogoutDialog from "@/components/settings/logout-dialog";
-import { canManageUsers } from "@/lib/utils";
+import { canManageUsers, canManageProducts, canView } from "@/lib/utils";
 
 const menuItems = [
   {
@@ -80,16 +80,20 @@ export function AppSidebar() {
     if (item.title === "Users") {
       return canManageUsers(user?.role);
     }
+    // Categories and Products are only visible to admin and stock_manager
+    if (item.title === "Categories" || item.title === "Products") {
+      return canManageProducts(user?.role);
+    }
     // All other menu items are visible to all authenticated users
-    return true;
+    return canView(user?.role);
   });
 
   return (
     <Sidebar className="border-r border-border/50">
-      <SidebarHeader className="p-4 lg:p-6 border-b border-sidebar-border">
+      <SidebarHeader className="h-16 px-4 border-b border-sidebar-border">
         <div className="flex items-center space-x-3">
           <div className="size-11 flex items-center justify-center bg-primary rounded-lg">
-            <Package className="h-6 w-6 text-primary-foreground" />
+            <Package className="h-5 w-5 text-primary-foreground" />
           </div>
           <div className="min-w-0">
             <h2 className="text-base font-semibold text-primary truncate">

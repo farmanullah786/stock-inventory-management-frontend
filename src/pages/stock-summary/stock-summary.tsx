@@ -1,14 +1,10 @@
-import { useState, useMemo, useEffect } from "react";
+import { useMemo } from "react";
 import { useFetchStockSummary } from "@/hooks/use-stock-summary";
 import { useFetchCategories } from "@/hooks/use-categories";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { CategoryCombobox } from "@/components/ui/category-combobox";
 import { ServerDataTable } from "@/components/shared/data-table/server-data-table";
 import { stockSummaryColumns } from "@/components/stock-summary/columns";
 import { usePaginationQuery } from "@/hooks/use-pagination-query";
-import { DateRangePicker } from "@/components/ui/date-range-picker";
 import Loader from "@/components/ui/loader";
 import AppHeader from "@/layouts/app-header";
 import {
@@ -18,28 +14,28 @@ import {
   BreadcrumbList,
 } from "@/components/ui/breadcrumb";
 import { Container } from "@/components/shared/container";
-import { FileSpreadsheet, FileText, Search, X } from "lucide-react";
+import { FileSpreadsheet, FileText } from "lucide-react";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { TableRow, TableCell } from "@/components/ui/table";
-import { useSearchParams } from "react-router-dom";
+import { ErrorDisplay } from "@/components/shared/error-display";
+import { FilterCard } from "@/components/shared/filter-card";
+import { SearchInput } from "@/components/shared/search-input";
+import { CategoryFilter } from "@/components/shared/category-filter";
+import { DateRangeFilter } from "@/components/shared/date-range-filter";
 
 const StockSummary = () => {
-  const { searchParams, setSearchParams } = usePaginationQuery();
+  const { searchParams, setSearchParams, queryOptions } = usePaginationQuery();
 
-  const queryOptions: any = {
-    ...Object.fromEntries(searchParams),
-    categoryId: searchParams.get("categoryId")
-      ? Number(searchParams.get("categoryId"))
-      : undefined,
-    startDate: searchParams.get("startDate") || undefined,
-    endDate: searchParams.get("endDate") || undefined,
-    search: searchParams.get("search") || undefined,
-  };
-
-  const { data, isLoading, isFetching, isSuccess, error } =
-    useFetchStockSummary(queryOptions);
+  const {
+    data,
+    isPending,
+    isFetching,
+    isSuccess,
+    isError,
+    error,
+  } = useFetchStockSummary(queryOptions);
 
   // Adapt current backend response to paginated format
   const summary = isSuccess ? data?.data || [] : [];
@@ -171,12 +167,22 @@ const StockSummary = () => {
     doc.save(fileName);
   };
 
-  if (error) {
+  if (isError) {
     return (
-      <div className="p-8 text-center text-destructive">
-        Error:{" "}
-        {error instanceof Error ? error.message : "An unknown error occurred"}
-      </div>
+      <>
+        <Header
+          onExportExcel={handleExportExcel}
+          onExportPDF={handleExportPDF}
+          canExport={false}
+        />
+        <Container>
+          <ErrorDisplay
+            error={error}
+            title="Failed to load stock summary"
+            onRetry={() => window.location.reload()}
+          />
+        </Container>
+      </>
     );
   }
 
@@ -192,7 +198,7 @@ const StockSummary = () => {
           {/* 🟢 1. FILTER SECTION (TOP - MUST HAVE) */}
           <StockSummary.Filters />
 
-          <Loader isPending={isLoading} className="py-8" />
+          <Loader isPending={isPending} className="py-8" />
           {isSuccess && (
             <ServerDataTable
               columns={stockSummaryColumns}
@@ -200,7 +206,7 @@ const StockSummary = () => {
               searchParams={searchParams}
               setSearchParams={setSearchParams}
               rowCount={rowCount}
-              isFetching={isFetching && !isLoading}
+              isFetching={isFetching && !isPending}
               footer={
                 summary.length > 0 ? (
                   <TableRow>
@@ -240,113 +246,18 @@ const StockSummary = () => {
 };
 
 StockSummary.Filters = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [searchTerm, setSearchTerm] = useState(
-    searchParams.get("search") || ""
-  );
-  const [categoryFilter, setCategoryFilter] = useState<number | null>(
-    searchParams.get("categoryId")
-      ? Number(searchParams.get("categoryId"))
-      : null
-  );
-  const [dateRange, setDateRange] = useState<
-    { from?: Date; to?: Date } | undefined
-  >(
-    searchParams.get("startDate") && searchParams.get("endDate")
-      ? {
-          from: new Date(searchParams.get("startDate")!),
-          to: new Date(searchParams.get("endDate")!),
-        }
-      : undefined
-  );
-
   const { data: categoriesData } = useFetchCategories({
     isActive: true,
     limit: 1000,
   });
   const categories = categoriesData?.data || [];
 
-  // Handle search term with debounce
-  useEffect(() => {
-    if (searchTerm !== searchParams.get("search")) {
-      const timeout = setTimeout(() => {
-        if (searchTerm) {
-          searchParams.set("search", searchTerm);
-        } else {
-          searchParams.delete("search");
-        }
-        setSearchParams(searchParams);
-      }, 500);
-
-      return () => clearTimeout(timeout);
-    }
-  }, [searchTerm, searchParams, setSearchParams]);
-
-  // Handle date range change
-  const handleDateRangeChange = (
-    range: { from?: Date; to?: Date } | undefined
-  ) => {
-    setDateRange(range);
-    if (range?.from && range?.to) {
-      searchParams.set("startDate", range.from.toISOString().split("T")[0]);
-      searchParams.set("endDate", range.to.toISOString().split("T")[0]);
-    } else {
-      searchParams.delete("startDate");
-      searchParams.delete("endDate");
-    }
-    setSearchParams(searchParams);
-  };
-
   return (
-    <Card className="shadow-none">
-      <CardContent className="p-4">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9"
-              />
-              {searchTerm && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7"
-                  onClick={() => setSearchTerm("")}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-          </div>
-
-          <CategoryCombobox
-            categories={categories}
-            selectedCategoryId={categoryFilter}
-            onSelect={(categoryId) => {
-              setCategoryFilter(categoryId);
-              if (categoryId === null) {
-                searchParams.delete("categoryId");
-              } else {
-                searchParams.set("categoryId", String(categoryId));
-              }
-              setSearchParams(searchParams);
-            }}
-            placeholder="All Categories"
-          />
-
-          <DateRangePicker
-            value={dateRange}
-            onChange={handleDateRangeChange}
-            placeholder="Date Range"
-            className="w-full sm:w-auto"
-          />
-        </div>
-      </CardContent>
-    </Card>
+    <FilterCard>
+      <SearchInput />
+      <CategoryFilter categories={categories} />
+      <DateRangeFilter />
+    </FilterCard>
   );
 };
 

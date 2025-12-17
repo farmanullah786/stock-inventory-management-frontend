@@ -29,10 +29,13 @@ export type QueryParams = {
   limit?: number;
   search?: string;
   category?: string;
-  materialId?: number;
+  categoryId?: number;
+  productId?: number;
   startDate?: string;
   endDate?: string;
   isActive?: boolean;
+  role?: string;
+  status?: string;
 };
 
 export type Pagination = {

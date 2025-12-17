@@ -15,7 +15,7 @@ import { Container } from "@/components/shared/container";
 import { useUser } from "@/store/use-user-store";
 import { Sheet, SheetTrigger } from "@/components/ui/sheet";
 import { useStore } from "@/store/use-app-store";
-import { AlertDialog } from "@/components";
+import { AlertDialog } from "@/components/ui/alert-dialog";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { getInitials, formatDate, capitalizeWords } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";

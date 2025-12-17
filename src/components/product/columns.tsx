@@ -1,26 +1,23 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MoreHorizontal } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { IProduct } from "@/types/api";
-import { Dialog, DialogTrigger } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { DataTableColumnHeader } from "../shared/data-table/data-table-column-header";
 import ProductFormDialog from "../product-form/product-form";
-import { ProductFormData } from "@/schemas/product-schema";
 import { DeleteProductAlert } from "./delete-product-alert";
-import { IDialogType } from "@/types";
-import { useState } from "react";
 import { TruncatedText } from "../shared/truncated-text";
+import { StatusBadge } from "../shared/status-badge";
+import { CreatorCell } from "../shared/creator-cell";
+import { TableActions } from "../shared/table-actions";
+import { canManageProducts, canDelete } from "@/lib/utils";
+import { useState } from "react";
+import { IDialogType } from "@/types";
 
-export const createProductColumns = (): ColumnDef<IProduct>[] => [
+export const createProductColumns = (userRole?: string): ColumnDef<IProduct>[] => {
+  const canEdit = canManageProducts(userRole);
+  const canDeleteProduct = canDelete(userRole);
+  const showActions = canEdit || canDeleteProduct;
+
+  const columns: ColumnDef<IProduct>[] = [
   {
     accessorKey: "name",
     header: ({ column }) => (
@@ -93,9 +90,7 @@ export const createProductColumns = (): ColumnDef<IProduct>[] => [
     ),
     cell: ({ row }) => (
       <div className="flex justify-center">
-        <Badge variant={row.original.isActive ? "default" : "destructive"}>
-          {row.original.isActive ? "Active" : "Inactive"}
-        </Badge>
+        <StatusBadge isActive={row.original.isActive} />
       </div>
     ),
     size: 120,
@@ -110,93 +105,78 @@ export const createProductColumns = (): ColumnDef<IProduct>[] => [
         <DataTableColumnHeader column={column} title="Created By" />
       </div>
     ),
-    cell: ({ row }) => {
-      const creator = row.original.creator;
-      if (!creator) return <div className="text-center">-</div>;
-      return (
-        <div className="text-center">
-          {`${creator.firstName} ${creator.lastName || ""}`.trim()}
-        </div>
-      );
-    },
+    cell: ({ row }) => <CreatorCell creator={row.original.creator} align="center" />,
     size: 180,
     minSize: 150,
     maxSize: 250,
     meta: { align: "center" },
   },
-  {
-    id: "actions",
-    header: ({ column }) => (
-      <div className="flex justify-end">
-        <DataTableColumnHeader column={column} title="Actions" />
-      </div>
-    ),
-    cell: ({ row }) => (
-      <div className="flex justify-end">
-        <ActionsRow product={row.original} />
-      </div>
-    ),
-    enableSorting: false,
-    size: 80,
-    minSize: 80,
-    maxSize: 100,
-    meta: { align: "right" },
-  },
-];
+  ];
+
+  // Only add actions column if user has permissions
+  if (showActions) {
+    columns.push({
+      id: "actions",
+      header: ({ column }) => (
+        <div className="flex justify-end">
+          <DataTableColumnHeader column={column} title="Actions" />
+        </div>
+      ),
+      cell: ({ row }) => (
+        <div className="flex justify-end">
+          <ActionsRow product={row.original} canEdit={canEdit} canDelete={canDeleteProduct} />
+        </div>
+      ),
+      enableSorting: false,
+      size: 80,
+      minSize: 80,
+      maxSize: 100,
+      meta: { align: "right" },
+    });
+  }
+
+  return columns;
+};
 
 const ActionsRow = ({ 
-  product
+  product,
+  canEdit,
+  canDelete: canDeleteProduct
 }: { 
   product: IProduct;
+  canEdit: boolean;
+  canDelete: boolean;
 }) => {
   const [dialogType, setDialogType] = useState<IDialogType>("None");
 
-  const handleDialogType = (type: IDialogType) => setDialogType(type);
-
   return (
-    <Dialog>
-      <AlertDialog>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="size-5"/>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-40">
-            <DialogTrigger asChild>
-              <DropdownMenuItem onClick={() => handleDialogType("Update")}>
-                Edit
-              </DropdownMenuItem>
-            </DialogTrigger>
-            <DropdownMenuSeparator />
-            <AlertDialogTrigger asChild>
-              <DropdownMenuItem onClick={() => handleDialogType("Delete")}>
-                Delete
-              </DropdownMenuItem>
-            </AlertDialogTrigger>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        {dialogType === "Delete" && (
+    <TableActions
+      canEdit={canEdit}
+      canDelete={canDeleteProduct}
+      onEdit={() => setDialogType("Update")}
+      onDelete={() => setDialogType("Delete")}
+      editDialog={
+        dialogType === "Update" && (
+          <ProductFormDialog
+            action="update"
+            product={{
+              name: product.name || "",
+              categoryId: product.categoryId || product.category?.id || 0,
+              unit: product.unit || "pcs",
+              description: product.description || "",
+              openingStock: product.openingStock || 0,
+              isActive: product.isActive !== undefined ? product.isActive : true,
+            }}
+            productId={product.id}
+          />
+        )
+      }
+      deleteDialog={
+        dialogType === "Delete" && (
           <DeleteProductAlert productId={product.id} />
-        )}
-      </AlertDialog>
-      {dialogType === "Update" && (
-        <ProductFormDialog
-          action="update"
-          product={{
-            name: product.name || "",
-            categoryId: product.categoryId || product.category?.id || 0,
-            unit: product.unit || "pcs",
-            description: product.description || "",
-            openingStock: product.openingStock || 0,
-            isActive: product.isActive !== undefined ? product.isActive : true,
-          }}
-          productId={product.id}
-        />
-      )}
-    </Dialog>
+        )
+      }
+    />
   );
 };
 

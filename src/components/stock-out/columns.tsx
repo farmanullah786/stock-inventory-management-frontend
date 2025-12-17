@@ -16,7 +16,7 @@ import { DataTableColumnHeader } from "../shared/data-table/data-table-column-he
 import StockOutFormDialog from "../stock-out-form/stock-out-form";
 import { StockOutFormData } from "@/schemas/stock-out-schema";
 import { format } from "date-fns";
-import { canDelete } from "@/lib/utils";
+import { canDelete, canModifyInventory } from "@/lib/utils";
 import { DeleteStockOutAlert } from "./delete-stock-out-alert";
 import { IDialogType } from "@/types";
 import { useState } from "react";
@@ -25,7 +25,12 @@ export const createStockOutColumns = (
   products: any[] = [],
   users: any[] = [],
   userRole?: string
-): ColumnDef<IStockOut>[] => [
+): ColumnDef<IStockOut>[] => {
+  const canEdit = canModifyInventory(userRole);
+  const canDeleteStockOut = canDelete(userRole);
+  const showActions = canEdit || canDeleteStockOut;
+
+  const columns: ColumnDef<IStockOut>[] = [
   {
     accessorKey: "id",
     header: ({ column }) => (
@@ -114,46 +119,58 @@ export const createStockOutColumns = (
       return `${creator.firstName} ${creator.lastName || ""}`.trim();
     },
   },
-  {
-    id: "actions",
-    header: ({ column }) => (
-      <div className="flex justify-end">
-        <DataTableColumnHeader column={column} title="Actions" />
-      </div>
-    ),
-    cell: ({ row }) => (
-      <div className="flex justify-end">
-        <ActionsRow
-          record={row.original}
-          products={products}
-          users={users}
-          userRole={userRole}
-        />
-      </div>
-    ),
-    enableSorting: false,
-    size: 80,
-    minSize: 80,
-    maxSize: 100,
-    meta: { align: "right" },
-  },
-];
+  ];
+
+  // Only add actions column if user has permissions
+  if (showActions) {
+    columns.push({
+      id: "actions",
+      header: ({ column }) => (
+        <div className="flex justify-end">
+          <DataTableColumnHeader column={column} title="Actions" />
+        </div>
+      ),
+      cell: ({ row }) => (
+        <div className="flex justify-end">
+          <ActionsRow
+            record={row.original}
+            products={products}
+            users={users}
+            canEdit={canEdit}
+            canDelete={canDeleteStockOut}
+          />
+        </div>
+      ),
+      enableSorting: false,
+      size: 80,
+      minSize: 80,
+      maxSize: 100,
+      meta: { align: "right" },
+    });
+  }
+
+  return columns;
+};
 
 const ActionsRow = ({
   record,
   products,
   users,
-  userRole,
+  canEdit,
+  canDelete: canDeleteStockOut,
 }: {
   record: IStockOut;
   products: any[];
   users: any[];
-  userRole?: string;
+  canEdit: boolean;
+  canDelete: boolean;
 }) => {
-  const showDelete = canDelete(userRole);
   const [dialogType, setDialogType] = useState<IDialogType>("None");
 
   const handleDialogType = (type: IDialogType) => setDialogType(type);
+
+  const hasAnyAction = canEdit || canDeleteStockOut;
+  if (!hasAnyAction) return null;
 
   return (
     <Dialog>
@@ -166,25 +183,25 @@ const ActionsRow = ({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40">
-            <DialogTrigger asChild>
-              <DropdownMenuItem onClick={() => handleDialogType("Update")}>
-                Edit
-              </DropdownMenuItem>
-            </DialogTrigger>
-            {showDelete && (
-              <>
-                <DropdownMenuSeparator />
-                <AlertDialogTrigger asChild>
-                  <DropdownMenuItem onClick={() => handleDialogType("Delete")}>
-                    Delete
-                  </DropdownMenuItem>
-                </AlertDialogTrigger>
-              </>
+            {canEdit && (
+              <DialogTrigger asChild>
+                <DropdownMenuItem onClick={() => handleDialogType("Update")}>
+                  Edit
+                </DropdownMenuItem>
+              </DialogTrigger>
+            )}
+            {canEdit && canDeleteStockOut && <DropdownMenuSeparator />}
+            {canDeleteStockOut && (
+              <AlertDialogTrigger asChild>
+                <DropdownMenuItem onClick={() => handleDialogType("Delete")}>
+                  Delete
+                </DropdownMenuItem>
+              </AlertDialogTrigger>
             )}
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {dialogType === "Delete" && showDelete && (
+        {dialogType === "Delete" && canDeleteStockOut && (
           <DeleteStockOutAlert stockOutId={record.id} />
         )}
       </AlertDialog>
