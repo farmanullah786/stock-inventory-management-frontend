@@ -57,15 +57,32 @@ export type IStockOut = BaseEntity & {
 };
 
 export type IStockSummary = {
+  // Basic product info (not in Excel export but used in app)
   productId: number;
   productName: string;
   category?: string;
   categoryId?: number;
   unit: string;
-  openingStock?: number;
-  totalIn: number;
   totalOut: number;
   availableStock: number;
+  // Excel export fields in order
+  openingStock?: number;
+  totalIn: number; // Quantity Purchased
+  unitPrice?: number;
+  totalPrice?: number;
+  currency?: string;
+  poNumber?: string;
+  invoiceNo?: string;
+  vendorName?: string;
+  grnNo?: string;
+  year?: number;
+  month?: number;
+  stockKeeper?: string;
+  issuedTo?: string; // Issue to (Employee & Customer Name)
+  requestNumber?: string;
+  issueDate?: string;
+  invoice?: string;
+  serialNo?: string;
 };
 
 export type IUser = BaseEntity & {
