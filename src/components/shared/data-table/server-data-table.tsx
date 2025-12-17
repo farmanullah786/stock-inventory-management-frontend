@@ -82,7 +82,7 @@ export function ServerDataTable<TData, TValue>({
   });
 
   return (
-    <div className={cn("space-y-4 bg-white border rounded-md", className)}>
+    <div className={cn("space-y-4 bg-bg border rounded-md", className)}>
       <div className="relative overflow-hidden rounded-md border-b rounded-b-none">
         <LoadingOverlay isFetching={isFetching} />
         <Table>
