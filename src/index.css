@@ -10,19 +10,19 @@
     --primary-dark: 320 22% 30%; /* Darker shade of primary */
     --primary-light: 320 18% 45%; /* Lighter shade of primary */
     --primary-lighter: 320 16% 60%; /* Even lighter shade of primary */
-    
+
     /* Secondary: #017E84 (RGB: 1, 126, 132) */
     --secondary: 183 98% 26%; /* #017E84 - Odoo Secondary Brand Color */
     --secondary-dark: 183 98% 22%; /* Darker shade of secondary */
     --secondary-light: 183 98% 35%; /* Lighter shade of secondary */
     --secondary-lighter: 183 98% 50%; /* Even lighter shade of secondary */
-    
+
     /* Gray: #8F8F8F (RGB: 143, 143, 143) */
     --gray: 0 0% 56%; /* #8F8F8F - Odoo Gray */
     --gray-dark: 0 0% 45%; /* Darker gray */
     --gray-light: 0 0% 70%; /* Lighter gray */
     --gray-lighter: 0 0% 85%; /* Even lighter gray */
-    
+
     /* Use Odoo colors for semantic purposes */
     --success: 183 98% 26%; /* Use Secondary for success states */
     --success-bg: 183 98% 95%; /* Light secondary background */
@@ -34,7 +34,7 @@
     --danger-bg: 320 20% 95%; /* Light primary background */
     --info: 183 98% 26%; /* Use Secondary for info states */
     --info-bg: 183 98% 95%; /* Light secondary background */
-    
+
     /* Neutral Colors - Derived from Odoo Gray */
     --text: 0 0% 15%; /* Dark text - derived from gray */
     --text-muted: 0 0% 56%; /* #8F8F8F - Odoo Gray for text/dividers */
@@ -45,14 +45,14 @@
     --bg-gray: 0 0% 98%; /* Very light gray background - derived from gray */
     --bg-gray-light: 0 0% 96%; /* Lighter gray background - derived from gray */
     --muted: 0 0% 88%; /* Muted gray background - derived from gray */
-    
+
     /* System Colors */
     --background: 0 0% 100%;
     --foreground: 0 0% 15%; /* Dark text - derived from gray */
 
     --card: 0 0% 100%;
     --card-foreground: 0 0% 15%; /* Dark text - derived from gray */
-    
+
     /* Card styling - Odoo style */
     --card-border: 0 0% 85%; /* Light border - derived from gray */
     /* Default shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) - shadow-sm */
@@ -99,19 +99,19 @@
     --primary-dark: 320 22% 45%; /* Lighter shade for dark mode */
     --primary-light: 320 18% 50%; /* Lighter shade for dark mode */
     --primary-lighter: 320 16% 65%; /* Even lighter shade for dark mode */
-    
+
     /* Secondary: #017E84 - Keep same in dark mode */
     --secondary: 183 98% 26%; /* #017E84 - Odoo Secondary Brand Color */
     --secondary-dark: 183 98% 35%; /* Lighter shade for dark mode */
     --secondary-light: 183 98% 45%; /* Lighter shade for dark mode */
     --secondary-lighter: 183 98% 60%; /* Even lighter shade for dark mode */
-    
+
     /* Gray: #8F8F8F - Adjusted for dark mode */
     --gray: 0 0% 65%; /* Lighter gray for dark mode */
     --gray-dark: 0 0% 55%; /* Medium gray */
     --gray-light: 0 0% 75%; /* Lighter gray */
     --gray-lighter: 0 0% 90%; /* Very light gray */
-    
+
     /* Use Odoo colors for semantic purposes - Dark Mode */
     --success: 183 98% 35%; /* Lighter secondary for dark mode */
     --success-bg: 183 98% 15%; /* Dark secondary background */
@@ -123,7 +123,7 @@
     --danger-bg: 320 20% 15%; /* Dark primary background */
     --info: 183 98% 35%; /* Lighter secondary for dark mode */
     --info-bg: 183 98% 15%; /* Dark secondary background */
-    
+
     /* Neutral Colors - Dark Mode */
     --text: 0 0% 90%; /* Light text for dark mode */
     --text-muted: 0 0% 65%; /* Medium gray text */
@@ -134,14 +134,14 @@
     --bg-gray: 0 0% 15%; /* Dark gray background */
     --bg-gray-light: 0 0% 18%; /* Lighter dark gray background */
     --muted: 0 0% 20%; /* Dark muted background */
-    
+
     /* System Colors - Dark Mode */
     --background: 0 0% 12%; /* Dark background */
     --foreground: 0 0% 90%; /* Light text */
 
     --card: 0 0% 15%; /* Dark card background */
     --card-foreground: 0 0% 90%; /* Light text */
-    
+
     /* Card styling - Dark Mode */
     --card-border: 0 0% 25%; /* Dark border */
     --card-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.3);
@@ -188,7 +188,9 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+      "Roboto", "Helvetica", "Arial", sans-serif, "Apple Color Emoji",
+      "Segoe UI Emoji", "Segoe UI Symbol";
     font-size: 1rem; /* 16px */
     font-weight: 400;
     line-height: 1.5;
@@ -242,18 +244,18 @@
     font-size: 0.6875rem; /* 11px - Odoo small text */
     line-height: 1.5;
   }
-  
+
   /* Odoo-specific font sizes */
   .odoo-text {
     font-size: 0.8125rem; /* 13px - Odoo main body text */
     line-height: 1.5;
   }
-  
+
   .odoo-text-small {
     font-size: 0.6875rem; /* 11px - Odoo small text */
     line-height: 1.5;
   }
-  
+
   input[type="number"]::-webkit-outer-spin-button,
   input[type="number"]::-webkit-inner-spin-button,
   input[type="number"] {
@@ -279,7 +281,8 @@
   /* Odoo Card Styling - Shadow, Hover, Active, Focus */
   .odoo-card {
     box-shadow: var(--card-shadow);
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out, background-color 0.15s ease-in-out;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out,
+      background-color 0.15s ease-in-out;
   }
 
   .odoo-card:hover {
@@ -321,7 +324,9 @@
 }
 
 *::-webkit-scrollbar-thumb {
-  background: hsl(var(--gray-light)); /* #B3B3B3 - Lighter gray for subtle appearance */
+  background: hsl(
+    var(--gray-light)
+  ); /* #B3B3B3 - Lighter gray for subtle appearance */
   border-radius: 4px;
   border: 2px solid hsl(var(--bg)); /* White border creates padding effect */
   background-clip: padding-box;

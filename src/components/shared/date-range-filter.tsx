@@ -2,18 +2,20 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { format } from "date-fns";
+import { DateRange } from "react-day-picker";
+import { RangeCalendarWithPresets } from "../ui/date-picker-with-range";
 
 interface DateRangeFilterProps {
   className?: string;
   placeholder?: string;
 }
 
-export const DateRangeFilter = ({ 
+export const DateRangeFilter = ({
   className = "w-full sm:w-auto",
-  placeholder = "Date Range"
+  placeholder = "Date Range",
 }: DateRangeFilterProps) => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date } | undefined>(
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(
     searchParams.get("startDate") && searchParams.get("endDate")
       ? {
           from: new Date(searchParams.get("startDate")!),
@@ -21,6 +23,8 @@ export const DateRangeFilter = ({
         }
       : undefined
   );
+
+  // const [date, setDate] = useState<DateRange | undefined>(undefined);
 
   useEffect(() => {
     if (dateRange?.from && dateRange?.to) {
@@ -34,12 +38,11 @@ export const DateRangeFilter = ({
   }, [dateRange, searchParams, setSearchParams]);
 
   return (
-    <DateRangePicker
-      value={dateRange}
-      onChange={setDateRange}
-      placeholder={placeholder}
+    <RangeCalendarWithPresets
+      date={dateRange}
+      onChange={(dateRange) => setDateRange(dateRange)}
+      placeholder="Pick a Date Range"
       className={className}
     />
   );
 };
-
