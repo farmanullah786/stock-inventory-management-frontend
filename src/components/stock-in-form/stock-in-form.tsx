@@ -124,7 +124,7 @@ export function StockInFormDialog(props: StockInFormProps) {
                     <FormLabel>Product</FormLabel>
                     <Select
                       onValueChange={(value) => field.onChange(parseInt(value))}
-                      value={field.value ? String(field.value) : ""}
+                      value={field.value ? String(field.value) : undefined}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -343,9 +343,9 @@ export function StockInFormDialog(props: StockInFormProps) {
                       <FormLabel>Stock Keeper</FormLabel>
                       <Select
                         onValueChange={(value) =>
-                          field.onChange(value ? parseInt(value) : undefined)
+                          field.onChange(value === "none" ? undefined : parseInt(value))
                         }
-                        value={field.value?.toString() || ""}
+                        value={field.value?.toString() || "none"}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -353,7 +353,7 @@ export function StockInFormDialog(props: StockInFormProps) {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">None</SelectItem>
+                          <SelectItem value="none">None</SelectItem>
                           {users.map((user) => (
                             <SelectItem key={user.id} value={user.id.toString()}>
                               {user.firstName} {user.lastName || ""}
@@ -402,7 +402,7 @@ export function StockInFormDialog(props: StockInFormProps) {
                         onValueChange={(value) =>
                           field.onChange(parseInt(value))
                         }
-                        value={field.value ? String(field.value) : ""}
+                        value={field.value ? String(field.value) : undefined}
                       >
                         <FormControl>
                           <SelectTrigger>

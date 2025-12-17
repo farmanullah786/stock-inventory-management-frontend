@@ -105,7 +105,7 @@ export function StockOutFormDialog(props: StockOutFormProps) {
                     <FormLabel>Product</FormLabel>
                     <Select
                       onValueChange={(value) => field.onChange(parseInt(value))}
-                      value={field.value ? String(field.value) : ""}
+                      value={field.value ? String(field.value) : undefined}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -174,9 +174,9 @@ export function StockOutFormDialog(props: StockOutFormProps) {
                     <FormLabel>Issued To</FormLabel>
                     <Select
                       onValueChange={(value) =>
-                        field.onChange(value ? parseInt(value) : undefined)
+                        field.onChange(value === "none" ? undefined : parseInt(value))
                       }
-                      value={field.value?.toString() || ""}
+                      value={field.value?.toString() || "none"}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -184,7 +184,7 @@ export function StockOutFormDialog(props: StockOutFormProps) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="none">None</SelectItem>
                         {users.map((user) => (
                           <SelectItem key={user.id} value={user.id.toString()}>
                             {user.firstName} {user.lastName || ""}
@@ -219,9 +219,9 @@ export function StockOutFormDialog(props: StockOutFormProps) {
                     <FormLabel>Technician</FormLabel>
                     <Select
                       onValueChange={(value) =>
-                        field.onChange(value ? parseInt(value) : undefined)
+                        field.onChange(value === "none" ? undefined : parseInt(value))
                       }
-                      value={field.value?.toString() || ""}
+                      value={field.value?.toString() || "none"}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -229,7 +229,7 @@ export function StockOutFormDialog(props: StockOutFormProps) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="none">None</SelectItem>
                         {users.map((user) => (
                           <SelectItem key={user.id} value={user.id.toString()}>
                             {user.firstName} {user.lastName || ""}
