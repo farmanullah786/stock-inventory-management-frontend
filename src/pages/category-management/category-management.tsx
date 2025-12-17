@@ -42,7 +42,7 @@ const CategoryManagement = () => {
     <>
       <Header />
       <Container>
-        <div className="space-y-6">
+        <div className="space-y-4">
           <CategoryManagement.Filters />
           {isPending ? (
             <TableSkeleton columnCount={columns.length} rowCount={10} />

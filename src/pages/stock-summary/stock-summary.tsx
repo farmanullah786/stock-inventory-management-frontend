@@ -91,7 +91,7 @@ const StockSummary = () => {
         canExport={isSuccess && summary.length > 0}
       />
       <Container>
-        <div className="space-y-6">
+        <div className="space-y-4">
           <StockSummary.Filters />
           {isPending ? (
             <TableSkeleton columnCount={stockSummaryColumns.length} rowCount={10} />

@@ -61,7 +61,7 @@ const StockOut = () => {
     <>
       <Header products={products} users={users} />
       <Container>
-        <div className="space-y-6">
+        <div className="space-y-4">
           <StockOut.Filters products={products} />
           {isPending ? (
             <TableSkeleton columnCount={columns.length} rowCount={10} />
