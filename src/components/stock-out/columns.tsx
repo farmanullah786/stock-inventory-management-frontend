@@ -32,12 +32,12 @@ export const createStockOutColumns = (
   const showActions = canEdit || canDeleteStockOut;
 
   const columns: ColumnDef<IStockOut>[] = [
-   {
+    {
       accessorKey: "id",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="ID" className="min-w-5" />
       ),
-       maxSize: 40,
+      maxSize: 40,
     },
     {
       accessorKey: "product.name",
@@ -217,13 +217,13 @@ const ActionsRow = ({
         <StockOutFormDialog
           action="update"
           stockOut={{
-            productId: record.productId || record.product?.id || 0,
-            date: record.date || new Date().toISOString().split("T")[0],
-            quantity: record.quantity || 0,
+            productId: record.productId || record.product.id,
+            date: record.date,
+            quantity: record.quantity,
             issuedToId: record.issuedToId,
-            site: record.site || "",
+            site: record.site,
             technicianId: record.technicianId,
-            remarks: record.remarks || "",
+            remarks: record.remarks,
           }}
           stockOutId={record.id}
           products={products}

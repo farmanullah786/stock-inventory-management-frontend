@@ -3,9 +3,9 @@ import { z } from "zod";
 export const stockInSchema = z.object({
   productId: z.number().min(1, { message: "Product is required." }),
   date: z.string().min(1, { message: "Date is required." }),
-  quantity: z.number().min(0.01, { message: "Quantity must be greater than 0." }),
-  unitPrice: z.number().min(0, { message: "Unit price must be 0 or greater." }).optional(),
-  totalPrice: z.number().min(0, { message: "Total price must be 0 or greater." }).optional(),
+  quantity: z.coerce.number().min(1,{ message: "Quantity must be greater than 0." }),
+  unitPrice: z.coerce.number().min(0, { message: "Unit price must be 0 or greater." }).optional(),
+  totalPrice: z.coerce.number().min(0, { message: "Total price must be 0 or greater." }).optional(),
   currency: z.string().optional(),
   poNumber: z.string().optional(),
   invoiceNo: z.string().optional(),

@@ -272,20 +272,20 @@ const ActionsRow = ({
         <StockInFormDialog
           action="update"
           stockIn={{
-            productId: record.productId || record.product?.id || 0,
-            date: record.date || new Date().toISOString().split("T")[0],
-            quantity: record.quantity || 0,
-            unitPrice: record.unitPrice || 0,
-            totalPrice: record.totalPrice || 0,
+            productId: record.productId || record.product.id,
+            date: record.date,
+            quantity: record.quantity,
+            unitPrice: record.unitPrice,
+            totalPrice: record.totalPrice,
             currency: record.currency || "AFN",
-            poNumber: record.poNumber || "",
-            invoiceNo: record.invoiceNo || "",
-            vendorName: record.vendorName || "",
-            grnNo: record.grnNo || "",
-            year: record.year || new Date().getFullYear(),
-            month: record.month || new Date().getMonth() + 1,
+            poNumber: record.poNumber,
+            invoiceNo: record.invoiceNo,
+            vendorName: record.vendorName,
+            grnNo: record.grnNo,
+            year: record.year,
+            month: record.month,
             stockKeeperId: record.stockKeeperId,
-            remarks: record.remarks || "",
+            remarks: record.remarks,
           }}
           stockInId={record.id}
           products={products}
