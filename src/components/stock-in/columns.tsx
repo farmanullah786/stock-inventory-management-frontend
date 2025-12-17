@@ -6,24 +6,25 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { IStockIn } from "@/types/api";
+import { IStockIn, IProduct, IUser } from "@/types/api";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { DataTableColumnHeader } from "../shared/data-table/data-table-column-header";
 import StockInFormDialog from "../stock-in-form/stock-in-form";
-import { StockInFormData } from "@/schemas/stock-in-schema";
-import { format } from "date-fns";
-import { canDelete, canModifyInventory } from "@/lib/utils";
+import { canDelete, canModifyInventory, formatDate } from "@/lib/utils";
 import { DeleteStockInAlert } from "./delete-stock-in-alert";
 import { IDialogType } from "@/types";
 import { useState } from "react";
+import { TruncatedText } from "../shared/truncated-text";
+import { CreatorCell } from "../shared/creator-cell";
 
 export const createStockInColumns = (
-  products: any[] = [],
-  users: any[] = [],
+  products: IProduct[] = [],
+  users: IUser[] = [],
   userRole?: string
 ): ColumnDef<IStockIn>[] => {
   const canEdit = canModifyInventory(userRole);
@@ -31,133 +32,158 @@ export const createStockInColumns = (
   const showActions = canEdit || canDeleteStockIn;
 
   const columns: ColumnDef<IStockIn>[] = [
-  {
-    accessorKey: "product.name",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Product" />
-    ),
-    cell: ({ row }) => row.original.product?.name || "N/A",
-  },
-  {
-    accessorKey: "quantity",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Quantity" />
-    ),
-    cell: ({ row }) => {
-      const qty = row.original.quantity || 0;
-      const unit = row.original.product?.unit || "";
-      return `${Number(qty).toFixed(2)} ${unit}`;
+    {
+      accessorKey: "id",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="ID" className="min-w-5" />
+      ),
+      maxSize: 40,
     },
-  },
-  {
-    accessorKey: "unitPrice",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Unit Price" />
-    ),
-    cell: ({ row }) => {
-      const price = Number(row.original.unitPrice) || 0;
-      return price.toFixed(2);
+    {
+      accessorKey: "product.name",
+      header: ({ column }) => (
+        <DataTableColumnHeader
+          column={column}
+          title="Product"
+          className="min-w-[10rem] text-left px-2.5"
+        />
+      ),
+
+      cell: ({ row }) => <TruncatedText text={row.original.product.name} />,
     },
-  },
-  {
-    accessorKey: "totalPrice",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Total Price" />
-    ),
-    cell: ({ row }) => {
-      const price = Number(row.original.totalPrice) || 0;
-      return price.toFixed(2);
+    {
+      accessorKey: "quantity",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Quantity" />
+      ),
+      cell: ({ row }) => {
+        const qty = row.original.quantity || 0;
+        const unit = row.original.product?.unit || "";
+        return `${Number(qty).toFixed(2)} ${unit}`;
+      },
     },
-  },
-  {
-    accessorKey: "currency",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Currency" />
-    ),
-    cell: ({ row }) => row.original.currency || "AFN",
-  },
-  {
-    accessorKey: "poNumber",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="PO Number" />
-    ),
-    cell: ({ row }) => row.original.poNumber || "-",
-  },
-  {
-    accessorKey: "invoiceNo",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Invoice N/O" />
-    ),
-    cell: ({ row }) => row.original.invoiceNo || "-",
-  },
-  {
-    accessorKey: "vendorName",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Vendor Name" />
-    ),
-    cell: ({ row }) => row.original.vendorName || "-",
-  },
-  {
-    accessorKey: "grnNo",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="GRN N/O" />
-    ),
-    cell: ({ row }) => row.original.grnNo || "-",
-  },
-  {
-    accessorKey: "year",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Year" />
-    ),
-    cell: ({ row }) => row.original.year || "-",
-  },
-  {
-    accessorKey: "month",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Month" />
-    ),
-    cell: ({ row }) => {
-      const month = row.original.month;
-      if (!month) return "-";
-      const monthNames = [
-        "January",
-        "February",
-        "March",
-        "April",
-        "May",
-        "June",
-        "July",
-        "August",
-        "September",
-        "October",
-        "November",
-        "December",
-      ];
-      return monthNames[month - 1] || "-";
+    {
+      accessorKey: "unitPrice",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Unit Price" />
+      ),
+      cell: ({ row }) => {
+        const price = Number(row.original.unitPrice) || 0;
+        return price.toFixed(2);
+      },
     },
-  },
-  {
-    accessorKey: "stockKeeper",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Stock Keeper" />
-    ),
-    cell: ({ row }) => {
-      const keeper = row.original.stockKeeper;
-      if (!keeper) return "-";
-      return `${keeper.firstName} ${keeper.lastName || ""}`.trim();
+    {
+      accessorKey: "totalPrice",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Total Price" />
+      ),
+      cell: ({ row }) => {
+        const price = Number(row.original.totalPrice) || 0;
+        return price.toFixed(2);
+      },
     },
-  },
-  {
-    accessorKey: "creator",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Created By" />
-    ),
-    cell: ({ row }) => {
-      const creator = row.original.creator;
-      if (!creator) return "-";
-      return `${creator.firstName} ${creator.lastName || ""}`.trim();
+    {
+      accessorKey: "currency",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Currency" />
+      ),
+      cell: ({ row }) => row.original.currency || "AFN",
     },
-  },
+    {
+      accessorKey: "poNumber",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="PO Number" />
+      ),
+      cell: ({ row }) => row.original.poNumber || "-",
+    },
+    {
+      accessorKey: "invoiceNo",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Invoice N/O" />
+      ),
+      cell: ({ row }) => row.original.invoiceNo || "-",
+    },
+    {
+      accessorKey: "vendorName",
+      header: ({ column }) => (
+        <DataTableColumnHeader
+          column={column}
+          title="Vendor Name"
+          className="min-w-[8rem]"
+        />
+      ),
+      cell: ({ row }) => row.original.vendorName || "-",
+    },
+    {
+      accessorKey: "grnNo",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="GRN N/O" />
+      ),
+      cell: ({ row }) => row.original.grnNo || "-",
+    },
+    {
+      accessorKey: "year",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Year" />
+      ),
+      cell: ({ row }) => row.original.year || "-",
+    },
+    {
+      accessorKey: "month",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Month" />
+      ),
+      cell: ({ row }) => {
+        const month = row.original.month;
+        if (!month) return "-";
+        const monthNames = [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ];
+        return monthNames[month - 1] || "-";
+      },
+    },
+    {
+      accessorKey: "stockKeeper",
+      header: ({ column }) => (
+        <DataTableColumnHeader
+          column={column}
+          title="Stock Keeper"
+          className="min-w-[8rem]"
+        />
+      ),
+      cell: ({ row }) => {
+        const keeper = row.original.stockKeeper;
+        if (!keeper) return "-";
+        return `${keeper.firstName} ${keeper.lastName || ""}`.trim();
+      },
+    },
+    {
+      accessorKey: "createdAt",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Created At" />
+      ),
+      cell: ({ row }) => formatDate(row.original.createdAt),
+    },
+    {
+      accessorKey: "creator",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Created By" />
+      ),
+      cell: ({ row }) => (
+        <CreatorCell creator={row.original.creator} align="center" />
+      ),
+    },
   ];
 
   // Only add actions column if user has permissions
@@ -165,26 +191,22 @@ export const createStockInColumns = (
     columns.push({
       id: "actions",
       header: ({ column }) => (
-        <div className="flex justify-end">
-          <DataTableColumnHeader column={column} title="Actions" />
-        </div>
+        <DataTableColumnHeader
+          column={column}
+          title=""
+          className="min-w-[3rem]"
+        />
       ),
       cell: ({ row }) => (
-        <div className="flex justify-end">
-          <ActionsRow
-            record={row.original}
-            products={products}
-            users={users}
-            canEdit={canEdit}
-            canDelete={canDeleteStockIn}
-          />
-        </div>
+        <ActionsRow
+          record={row.original}
+          products={products}
+          users={users}
+          canEdit={canEdit}
+          canDelete={canDeleteStockIn}
+        />
       ),
-      enableSorting: false,
-      size: 80,
-      minSize: 80,
-      maxSize: 100,
-      meta: { align: "right" },
+      maxSize: 30,
     });
   }
 
@@ -199,8 +221,8 @@ const ActionsRow = ({
   canDelete: canDeleteStockIn,
 }: {
   record: IStockIn;
-  products: any[];
-  users: any[];
+  products: IProduct[];
+  users: IUser[];
   canEdit: boolean;
   canDelete: boolean;
 }) => {
@@ -221,7 +243,9 @@ const ActionsRow = ({
               <MoreHorizontal className="size-5" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-40">
+          <DropdownMenuContent align="end" className="w-32">
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuSeparator />
             {canEdit && (
               <DialogTrigger asChild>
                 <DropdownMenuItem onClick={() => handleDialogType("Update")}>
@@ -229,7 +253,7 @@ const ActionsRow = ({
                 </DropdownMenuItem>
               </DialogTrigger>
             )}
-            {canEdit && canDeleteStockIn && <DropdownMenuSeparator />}
+            {/* {canEdit && canDeleteStockIn && <DropdownMenuSeparator />} */}
             {canDeleteStockIn && (
               <AlertDialogTrigger asChild>
                 <DropdownMenuItem onClick={() => handleDialogType("Delete")}>
@@ -271,4 +295,3 @@ const ActionsRow = ({
     </Dialog>
   );
 };
-

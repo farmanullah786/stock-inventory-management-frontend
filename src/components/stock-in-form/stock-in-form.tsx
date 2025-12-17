@@ -1,6 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { stockInSchema, StockInFormData } from "@/schemas/stock-in-schema";
+import { IProduct, IUser } from "@/types/api";
 import {
   DialogClose,
   DialogContent,
@@ -49,13 +50,13 @@ const defaultValues = {
 };
 
 type StockInFormProps =
-  | { action: "create"; products: any[]; users: any[] }
+  | { action: "create"; products: IProduct[]; users: IUser[] }
   | {
       action: "update";
       stockIn: StockInFormData;
       stockInId: number;
-      products: any[];
-      users: any[];
+      products: IProduct[];
+      users: IUser[];
     };
 
 export function StockInFormDialog(props: StockInFormProps) {

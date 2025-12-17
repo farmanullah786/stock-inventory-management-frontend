@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useFetchStockSummary } from "@/hooks/use-stock-summary";
 import { useFetchCategories } from "@/hooks/use-categories";
+import { IStockSummary } from "@/types/api";
 import { Button } from "@/components/ui/button";
 import { ServerDataTable } from "@/components/shared/data-table/server-data-table";
 import { stockSummaryColumns } from "@/components/stock-summary/columns";
@@ -44,7 +45,7 @@ const StockSummary = () => {
   // Calculate totals for total row
   const totals = useMemo(() => {
     return summary.reduce(
-      (acc: any, item: any) => {
+      (acc: { totalIn: number; totalOut: number; availableStock: number }, item: IStockSummary) => {
         acc.totalIn += item.totalIn || 0;
         acc.totalOut += item.totalOut || 0;
         acc.availableStock += item.availableStock || 0;
@@ -56,7 +57,7 @@ const StockSummary = () => {
 
   // Export to Excel
   const handleExportExcel = () => {
-    const exportData = summary.map((item: any) => ({
+    const exportData = summary.map((item: IStockSummary) => ({
       "Product Name": item.productName,
       Category: item.category || "-",
       "Opening Stock": Math.floor(item.openingStock || 0),
@@ -114,7 +115,7 @@ const StockSummary = () => {
     }
 
     // Table data
-    const tableData = summary.map((item: any) => [
+    const tableData = summary.map((item: IStockSummary) => [
       item.productName,
       item.category || "-",
       Math.floor(item.openingStock || 0).toString(),

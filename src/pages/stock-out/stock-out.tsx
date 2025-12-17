@@ -18,6 +18,7 @@ import { Container } from '@/components/shared/container';
 import Loader from '@/components/ui/loader';
 import { ServerDataTable } from '@/components/shared/data-table/server-data-table';
 import { ErrorDisplay } from '@/components/shared/error-display';
+import { IProduct, IUser } from '@/types/api';
 
 const StockOut = () => {
   const { searchParams, setSearchParams, queryOptions } = usePaginationQuery();
@@ -43,10 +44,13 @@ const StockOut = () => {
     [productsData?.data, usersData?.data, user?.role]
   );
 
+  const products = productsData?.data || [];
+  const users = usersData?.data || [];
+
   if (isError) {
     return (
       <>
-        <Header />
+        <Header products={products} users={users} />
         <Container>
           <ErrorDisplay
             error={error}
@@ -60,10 +64,10 @@ const StockOut = () => {
 
   return (
     <>
-      <Header />
+      <Header products={products} users={users} />
       <Container>
         <div className="space-y-6">
-          <StockOut.Filters products={productsData?.data || []} />
+          <StockOut.Filters products={products} />
           <Loader isPending={isPending} className="py-8" />
           {isSuccess && (
             <ServerDataTable
@@ -81,7 +85,7 @@ const StockOut = () => {
   );
 };
 
-StockOut.Filters = ({ products }: { products: any[] }) => {
+StockOut.Filters = ({ products }: { products: IProduct[] }) => {
   return (
     <FilterCard>
       <SearchInput />
@@ -91,9 +95,7 @@ StockOut.Filters = ({ products }: { products: any[] }) => {
   );
 };
 
-const Header = () => {
-  const { data: productsData } = useFetchProducts();
-  const { data: usersData } = useFetchUsers({ page: 1, limit: 1000 });
+const Header = ({ products, users }: { products: IProduct[]; users: IUser[] }) => {
   const { user } = useUser();
   return (
     <PageHeader
@@ -105,8 +107,8 @@ const Header = () => {
               dialog: (
                 <StockOutFormDialog
                   action="create"
-                  products={productsData?.data || []}
-                  users={usersData?.data || []}
+                  products={products}
+                  users={users}
                 />
               ),
             }

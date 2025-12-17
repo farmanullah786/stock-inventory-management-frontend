@@ -7,6 +7,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
@@ -39,7 +41,9 @@ export const columns: ColumnDef<IUser>[] = [
             </AvatarFallback>
           </Avatar>
           <div>
-            <p className="font-medium">{`${firstName} ${lastName || ""}`.trim()}</p>
+            <p className="font-medium">
+              {`${firstName} ${lastName || ""}`.trim()}
+            </p>
             <p className="text-sm text-muted-foreground">{email}</p>
           </div>
         </div>
@@ -80,27 +84,21 @@ export const columns: ColumnDef<IUser>[] = [
   {
     accessorKey: "createdAt",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Date Created" />
+      <DataTableColumnHeader column={column} title="Created At" />
     ),
     cell: ({ row }) => formatDate(row.original.createdAt),
   },
   {
     id: "actions",
     header: ({ column }) => (
-      <div className="flex justify-end">
-        <DataTableColumnHeader column={column} title="Actions" />
-      </div>
+      <DataTableColumnHeader
+        column={column}
+        title=""
+        className="min-w-[.5rem]"
+      />
     ),
-    cell: ({ row }) => (
-      <div className="flex justify-end">
-        <ActionsRow user={row.original} />
-      </div>
-    ),
-    enableSorting: false,
-    size: 80,
-    minSize: 80,
-    maxSize: 100,
-    meta: { align: "right" },
+    cell: ({ row }) => <ActionsRow user={row.original} />,
+    maxSize: 30,
   },
 ];
 
@@ -124,7 +122,9 @@ const ActionsRow = ({ user }: { user: IUser }) => {
               <MoreHorizontal className="size-5" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-40">
+          <DropdownMenuContent align="end" className="w-32">
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuSeparator />
             <DialogTrigger asChild>
               <DropdownMenuItem onClick={() => handleDialogType("Update")}>
                 Edit
@@ -157,7 +157,11 @@ const ActionsRow = ({ user }: { user: IUser }) => {
             lastName: user.lastName || "",
             email: user.email,
             phoneNumber: user.phoneNumber || "",
-            role: user.role as "admin" | "stock_manager" | "stock_keeper" | "viewer",
+            role: user.role as
+              | "admin"
+              | "stock_manager"
+              | "stock_keeper"
+              | "viewer",
             status: user.status as "active" | "inactive",
           }}
           userId={user.id}
@@ -166,4 +170,3 @@ const ActionsRow = ({ user }: { user: IUser }) => {
     </Dialog>
   );
 };
-

@@ -7,110 +7,113 @@ import { DeleteProductAlert } from "./delete-product-alert";
 import { TruncatedText } from "../shared/truncated-text";
 import { StatusBadge } from "../shared/status-badge";
 import { CreatorCell } from "../shared/creator-cell";
-import { TableActions } from "../shared/table-actions";
 import { canManageProducts, canDelete } from "@/lib/utils";
 import { useState } from "react";
 import { IDialogType } from "@/types";
+import { formatDate } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { MoreHorizontal } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
-export const createProductColumns = (userRole?: string): ColumnDef<IProduct>[] => {
+export const createProductColumns = (
+  userRole?: string
+): ColumnDef<IProduct>[] => {
   const canEdit = canManageProducts(userRole);
   const canDeleteProduct = canDelete(userRole);
   const showActions = canEdit || canDeleteProduct;
 
   const columns: ColumnDef<IProduct>[] = [
-  {
-    accessorKey: "name",
-    header: ({ column }) => (
-      <div className="flex justify-start">
-        <DataTableColumnHeader column={column} title="Name" />
-      </div>
-    ),
-    cell: ({ row }) => (
-      <div className="text-left">
-        <TruncatedText text={row.original.name} maxLength={30} />
-      </div>
-    ),
-    size: 200,
-    minSize: 150,
-    maxSize: 300,
-    meta: { align: "left" },
-  },
-  {
-    accessorKey: "category.name",
-    header: ({ column }) => (
-      <div className="flex justify-center">
-        <DataTableColumnHeader column={column} title="Category" />
-      </div>
-    ),
-    cell: ({ row }) => (
-      <div className="flex justify-center">
-        <Badge variant="outline">{row.original.category?.name || "N/A"}</Badge>
-      </div>
-    ),
-    size: 150,
-    minSize: 120,
-    maxSize: 200,
-    meta: { align: "center" },
-  },
-  {
-    accessorKey: "unit",
-    header: ({ column }) => (
-      <div className="flex justify-center">
-        <DataTableColumnHeader column={column} title="Unit" />
-      </div>
-    ),
-    cell: ({ row }) => <div className="text-center">{row.original.unit || "-"}</div>,
-    size: 100,
-    minSize: 80,
-    maxSize: 120,
-    meta: { align: "center" },
-  },
-  {
-    accessorKey: "openingStock",
-    header: ({ column }) => (
-      <div className="flex justify-center">
-        <DataTableColumnHeader column={column} title="Opening Stock" />
-      </div>
-    ),
-    cell: ({ row }) => {
-      const stock = Number(row.original.openingStock) || 0;
-      return <div className="text-center">{Math.floor(stock).toString()}</div>;
+    {
+      accessorKey: "id",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="ID" className="min-w-5" />
+      ),
+      maxSize: 40,
     },
-    size: 140,
-    minSize: 120,
-    maxSize: 180,
-    meta: { align: "center" },
-  },
-  {
-    accessorKey: "isActive",
-    header: ({ column }) => (
-      <div className="flex justify-center">
+    {
+      accessorKey: "name",
+      header: ({ column }) => (
+        <DataTableColumnHeader
+          column={column}
+          title="Name"
+          className="text-left min-w-[10rem]"
+        />
+      ),
+
+      cell: ({ row }) => (
+        <TruncatedText text={row.original.name} className="text-left block" />
+      ),
+    },
+    {
+      accessorKey: "category.name",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Category" />
+      ),
+      cell: ({ row }) => (
+        <div className="flex justify-center">
+          <Badge variant="outline">
+            {row.original.category?.name || "N/A"}
+          </Badge>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "unit",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Unit" />
+      ),
+      cell: ({ row }) => (
+        <div className="text-center">{row.original.unit || "-"}</div>
+      ),
+    },
+    {
+      accessorKey: "openingStock",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Opening Stock" />
+      ),
+      cell: ({ row }) => {
+        const stock = Number(row.original.openingStock) || 0;
+        return (
+          <div className="text-center">{Math.floor(stock).toString()}</div>
+        );
+      },
+    },
+    {
+      accessorKey: "isActive",
+      header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Status" />
-      </div>
-    ),
-    cell: ({ row }) => (
-      <div className="flex justify-center">
-        <StatusBadge isActive={row.original.isActive} />
-      </div>
-    ),
-    size: 120,
-    minSize: 100,
-    maxSize: 150,
-    meta: { align: "center" },
-  },
-  {
-    accessorKey: "creator",
-    header: ({ column }) => (
-      <div className="flex justify-center">
+      ),
+      cell: ({ row }) => (
+        <div className="flex justify-center">
+          <StatusBadge isActive={row.original.isActive} />
+        </div>
+      ),
+    },
+    {
+      accessorKey: "createdAt",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Created At" />
+      ),
+      cell: ({ row }) => formatDate(row.original.createdAt),
+    },
+    {
+      accessorKey: "creator",
+      header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Created By" />
-      </div>
-    ),
-    cell: ({ row }) => <CreatorCell creator={row.original.creator} align="center" />,
-    size: 180,
-    minSize: 150,
-    maxSize: 250,
-    meta: { align: "center" },
-  },
+      ),
+      cell: ({ row }) => (
+        <CreatorCell creator={row.original.creator} align="center" />
+      ),
+    },
   ];
 
   // Only add actions column if user has permissions
@@ -118,65 +121,91 @@ export const createProductColumns = (userRole?: string): ColumnDef<IProduct>[] =
     columns.push({
       id: "actions",
       header: ({ column }) => (
-        <div className="flex justify-end">
-          <DataTableColumnHeader column={column} title="Actions" />
-        </div>
+        <DataTableColumnHeader
+          column={column}
+          title=""
+          className="min-w-[3rem]"
+        />
       ),
       cell: ({ row }) => (
-        <div className="flex justify-end">
-          <ActionsRow product={row.original} canEdit={canEdit} canDelete={canDeleteProduct} />
-        </div>
+        <ActionsRow
+          product={row.original}
+          canEdit={canEdit}
+          canDelete={canDeleteProduct}
+        />
       ),
-      enableSorting: false,
-      size: 80,
-      minSize: 80,
-      maxSize: 100,
-      meta: { align: "right" },
+      maxSize: 30,
     });
   }
 
   return columns;
 };
 
-const ActionsRow = ({ 
+const ActionsRow = ({
   product,
   canEdit,
-  canDelete: canDeleteProduct
-}: { 
+  canDelete: canDeleteProduct,
+}: {
   product: IProduct;
   canEdit: boolean;
   canDelete: boolean;
 }) => {
   const [dialogType, setDialogType] = useState<IDialogType>("None");
 
+  const handleDialogType = (type: IDialogType) => setDialogType(type);
+
+  const hasAnyAction = canEdit || canDeleteProduct;
+  if (!hasAnyAction) return null;
+
   return (
-    <TableActions
-      canEdit={canEdit}
-      canDelete={canDeleteProduct}
-      onEdit={() => setDialogType("Update")}
-      onDelete={() => setDialogType("Delete")}
-      editDialog={
-        dialogType === "Update" && (
-          <ProductFormDialog
-            action="update"
-            product={{
-              name: product.name || "",
-              categoryId: product.categoryId || product.category?.id || 0,
-              unit: product.unit || "pcs",
-              description: product.description || "",
-              openingStock: product.openingStock || 0,
-              isActive: product.isActive !== undefined ? product.isActive : true,
-            }}
-            productId={product.id}
-          />
-        )
-      }
-      deleteDialog={
-        dialogType === "Delete" && (
+    <Dialog>
+      <AlertDialog>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <span className="sr-only">Open menu</span>
+              <MoreHorizontal className="size-5" />
+            </Button>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent align="end" className="w-32">
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {canEdit && (
+              <DialogTrigger asChild>
+                <DropdownMenuItem onClick={() => handleDialogType("Update")}>
+                  Edit
+                </DropdownMenuItem>
+              </DialogTrigger>
+            )}
+            {canDeleteProduct && (
+              <AlertDialogTrigger asChild>
+                <DropdownMenuItem onClick={() => handleDialogType("Delete")}>
+                  Delete
+                </DropdownMenuItem>
+              </AlertDialogTrigger>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {dialogType === "Delete" && canDeleteProduct && (
           <DeleteProductAlert productId={product.id} />
-        )
-      }
-    />
+        )}
+      </AlertDialog>
+      {dialogType === "Update" && (
+        <ProductFormDialog
+          action="update"
+          product={{
+            name: product.name || "",
+            categoryId: product.categoryId || product.category?.id || 0,
+            unit: product.unit || "pcs",
+            description: product.description || "",
+            openingStock: product.openingStock || 0,
+            isActive: product.isActive !== undefined ? product.isActive : true,
+          }}
+          productId={product.id}
+        />
+      )}
+    </Dialog>
   );
 };
-

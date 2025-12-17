@@ -1,6 +1,7 @@
 import { useFetchStockSummary } from '@/hooks/use-stock-summary';
-import * as React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useMemo } from 'react';
+import { IStockSummary } from '@/types/api';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
   Package, 
@@ -11,25 +12,16 @@ import {
   CheckCircle2,
   XCircle,
   BarChart3,
-  PieChart,
   Warehouse
 } from 'lucide-react';
 import {
   BarChart,
   Bar,
-  PieChart as RechartsPieChart,
-  Pie,
-  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
   Legend,
-  ResponsiveContainer,
-  Label,
-  Sector,
 } from 'recharts';
-import type { PieSectorDataItem } from 'recharts/types/polar/Pie';
 import {
   ChartContainer,
   ChartStyle,
@@ -37,7 +29,6 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from '@/components/ui/chart';
-import { CardDescription, CardFooter } from '@/components/ui/card';
 import AppHeader from '@/layouts/app-header';
 import {
   Breadcrumb,
@@ -52,22 +43,21 @@ import { DashboardSkeleton } from '@/components/shared/dashboard-skeleton';
 const Dashboard = () => {
   const { data, isPending, isError, error } = useFetchStockSummary();
   
-  const summary = data?.data || [];
-  const lowStockItems = React.useMemo(() => {
-    return summary.filter((item: any) => {
+  const summary = (data?.data || []) as IStockSummary[];
+  const lowStockItems = useMemo(() => {
+    return summary.filter((item: IStockSummary) => {
       const stock = item.availableStock || 0;
       return stock > 0 && stock < 10;
     });
   }, [summary]);
   
-  const inStockItems = React.useMemo(() => {
-    return summary.filter((item: any) => (item.availableStock || 0) >= 10);
+  const inStockItems = useMemo(() => {
+    return summary.filter((item: IStockSummary) => (item.availableStock || 0) >= 10);
   }, [summary]);
   
-  const outOfStockItems = React.useMemo(() => {
-    return summary.filter((item: any) => (item.availableStock || 0) <= 0);
+  const outOfStockItems = useMemo(() => {
+    return summary.filter((item: IStockSummary) => (item.availableStock || 0) <= 0);
   }, [summary]);
-
 
   if (isPending) {
     return (
@@ -97,23 +87,23 @@ const Dashboard = () => {
 
   const totalProducts = summary.length;
   const totalOpeningStock = summary.reduce(
-    (sum: number, item: any) => sum + (item.openingStock || 0),
+    (sum: number, item: IStockSummary) => sum + (item.openingStock || 0),
     0
   );
   const totalStockIn = summary.reduce(
-    (sum: number, item: any) => sum + (item.totalIn || 0),
+    (sum: number, item: IStockSummary) => sum + (item.totalIn || 0),
     0
   );
   const totalStockOut = summary.reduce(
-    (sum: number, item: any) => sum + (item.totalOut || 0),
+    (sum: number, item: IStockSummary) => sum + (item.totalOut || 0),
     0
   );
   const totalAvailable = summary.reduce(
-    (sum: number, item: any) => sum + (item.availableStock || 0),
+    (sum: number, item: IStockSummary) => sum + (item.availableStock || 0),
     0
   );
 
-  const categoryData = summary.reduce((acc: any, item: any) => {
+  const categoryData = summary.reduce((acc: Record<string, { category: string; totalIn: number; totalOut: number }>, item: IStockSummary) => {
     const category = item.category || 'Other';
     if (!acc[category]) {
       acc[category] = { category, totalIn: 0, totalOut: 0 };
@@ -125,18 +115,16 @@ const Dashboard = () => {
 
   const categoryChartData = Object.values(categoryData).slice(0, 8);
 
-  const categoryDistribution = summary.reduce((acc: any, item: any) => {
-    const category = item.category || 'Other';
-    acc[category] = (acc[category] || 0) + 1;
-    return acc;
-  }, {});
-
-  const categoryPieData = Object.entries(categoryDistribution)
-    .map(([name, value]) => ({
-      name,
-      value: value as number,
-    }))
-    .slice(0, 8);
+  const stockMovementChartConfig = {
+    totalIn: {
+      label: 'Stock In',
+      color: '#10b981',
+    },
+    totalOut: {
+      label: 'Stock Out',
+      color: '#ef4444',
+    },
+  } satisfies ChartConfig;
   
   const stats = [
     {
@@ -171,11 +159,10 @@ const Dashboard = () => {
       <Header />
       <Container>
         <div className="space-y-4">
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.slice(0, 4).map((stat) => {
-          const Icon = stat.icon;
-          return (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {stats.map((stat) => {
+              const Icon = stat.icon;
+              return (
             <Card key={stat.title}>
               <CardContent className="p-6">
                 <div className="flex items-start gap-3">
@@ -189,31 +176,10 @@ const Dashboard = () => {
                 </div>
               </CardContent>
             </Card>
-          );
-        })}
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.slice(4).map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <Card key={stat.title}>
-              <CardContent className="p-6">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <Icon className="w-6 h-6 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">{stat.title}</p>
-                    <p className="text-2xl font-bold">{stat.value}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-        
-        <Card>
+              );
+            })}
+            
+            <Card>
           <CardContent className="p-6">
             <div className="flex items-start gap-3">
               <div className="p-2 bg-primary/10 rounded-lg">
@@ -253,22 +219,13 @@ const Dashboard = () => {
               </div>
             </div>
           </CardContent>
-        </Card>
-      </div>
+          </Card>
+          </div>
 
-      <Card className="hover:shadow-md transition-shadow">
+          <Card className="hover:shadow-md transition-shadow">
         <ChartStyle 
           id="stock-movement" 
-          config={{
-            totalIn: {
-              label: 'Stock In',
-              color: '#10b981',
-            },
-            totalOut: {
-              label: 'Stock Out',
-              color: '#ef4444',
-            },
-          }} 
+          config={stockMovementChartConfig} 
         />
         <CardHeader>
           <div className="flex items-center gap-2">
@@ -280,16 +237,7 @@ const Dashboard = () => {
         <CardContent>
           <ChartContainer
             id="stock-movement"
-            config={{
-              totalIn: {
-                label: 'Stock In',
-                color: '#10b981',
-              },
-              totalOut: {
-                label: 'Stock Out',
-                color: '#ef4444',
-              },
-            }}
+            config={stockMovementChartConfig}
             className="w-full h-[350px]"
           >
             <BarChart data={categoryChartData}>
@@ -338,7 +286,7 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {lowStockItems.slice(0, 10).map((item: any) => {
+              {lowStockItems.slice(0, 10).map((item: IStockSummary) => {
                 const currentStock = item.availableStock || 0;
                 const minimumThreshold = 10;
                 
@@ -381,7 +329,7 @@ const Dashboard = () => {
             </div>
           </CardContent>
         </Card>
-      )}
+          )}
         </div>
       </Container>
     </>

@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useFetchProducts } from '@/hooks/use-products';
 import { useFetchCategories } from '@/hooks/use-categories';
+import { ICategory } from '@/types/api';
 import { useUser } from '@/store/use-user-store';
 import ProductFormDialog from '../../components/product-form/product-form';
 import { canManageProducts } from '@/lib/utils';
@@ -82,7 +83,7 @@ const ProductManagement = () => {
   );
 };
 
-ProductManagement.Filters = ({ categories }: { categories: any[] }) => {
+ProductManagement.Filters = ({ categories }: { categories: ICategory[] }) => {
   return (
     <FilterCard>
       <SearchInput />

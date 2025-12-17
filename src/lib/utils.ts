@@ -51,7 +51,7 @@ export function getCommonPinningStyles<TData>({
     right: isPinned === "right" ? `${column.getAfter("right")}px` : undefined,
     opacity: isPinned ? 0.97 : 1,
     position: isPinned ? "sticky" : "relative",
-    background: isPinned ? "hsl(var(--background))" : "hsl(var(--background))",
+    background: "hsl(var(--background))",
     width: column.getSize(),
     zIndex: isPinned ? 1 : 0,
   };
@@ -75,16 +75,17 @@ export const getInitials = (name: string, lastName?: string): string => {
 };
 
 export const formatDate = (date: string | Date): string => {
-  if (!date) return "";
+  if (!date) return "N/A";
   try {
     const dateObj = typeof date === "string" ? new Date(date) : date;
+    if (isNaN(dateObj.getTime())) return "N/A";
     return dateObj.toLocaleDateString("en-US", {
       year: "numeric",
-      month: "long",
+      month: "short",
       day: "numeric",
     });
   } catch {
-    return String(date);
+    return "N/A";
   }
 };
 
@@ -113,12 +114,6 @@ export const getRoleBadgeColor = (role: string) => {
     default:
       return "secondary";
   }
-};
-
-// Role-based permission checks
-export const hasRole = (userRole: string | undefined, allowedRoles: string[]): boolean => {
-  if (!userRole) return false;
-  return allowedRoles.includes(userRole);
 };
 
 export const isAdmin = (role: string | undefined): boolean => {

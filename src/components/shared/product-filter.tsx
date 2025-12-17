@@ -1,8 +1,9 @@
 import { useSearchParams } from "react-router-dom";
 import { ProductCombobox } from "@/components/ui/product-combobox";
+import { IProduct } from "@/types/api";
 
 interface ProductFilterProps {
-  products: any[];
+  products: IProduct[];
   className?: string;
 }
 
@@ -22,13 +23,14 @@ export const ProductFilter = ({ products, className = "" }: ProductFilterProps) 
   };
 
   return (
-    <ProductCombobox
-      products={products}
-      selectedProductId={productFilter}
-      onSelect={handleProductChange}
-      placeholder="All Products"
-      className={className}
-    />
+    <div className={className}>
+      <ProductCombobox
+        products={products}
+        selectedProductId={productFilter}
+        onSelect={handleProductChange}
+        placeholder="All Products"
+      />
+    </div>
   );
 };
 

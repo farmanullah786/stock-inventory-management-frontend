@@ -1,8 +1,9 @@
 import { useSearchParams } from "react-router-dom";
 import { CategoryCombobox } from "@/components/ui/category-combobox";
+import { ICategory } from "@/types/api";
 
 interface CategoryFilterProps {
-  categories: any[];
+  categories: ICategory[];
   className?: string;
 }
 
@@ -22,13 +23,14 @@ export const CategoryFilter = ({ categories, className = "" }: CategoryFilterPro
   };
 
   return (
-    <CategoryCombobox
-      categories={categories}
-      selectedCategoryId={categoryFilter}
-      onSelect={handleCategoryChange}
-      placeholder="All Categories"
-      className={className}
-    />
+    <div className={className}>
+      <CategoryCombobox
+        categories={categories}
+        selectedCategoryId={categoryFilter}
+        onSelect={handleCategoryChange}
+        placeholder="All Categories"
+      />
+    </div>
   );
 };
 
