@@ -5,9 +5,6 @@ const createApiClient = (): AxiosInstance => {
   const client = axios.create({
     baseURL: appConfig.api.baseUrl,
     timeout: appConfig.api.timeout,
-    // headers: {
-    //   "Content-Type": "application/json",
-    // },
   });
 
   // Request interceptor
@@ -54,6 +51,4 @@ const createApiClient = (): AxiosInstance => {
 };
 
 export const apiClient = createApiClient();
-
-export type ApiClientType = typeof apiClient;
 

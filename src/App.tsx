@@ -13,6 +13,8 @@ import { AuthLayout } from "./layouts/auth-layout";
 import { ProtectedRoute } from "./routes/protected-route";
 import { PublicRoute } from "./routes/public-route";
 import { routesConfig } from "./config/routes-config";
+import { DEFAULT_THEME, THEME_STORAGE_KEY, QUERY_CONFIG } from "./constants";
+import { getPathSegment } from "./lib/utils";
 import Dashboard from "./pages/dashboard/dashboard";
 import StockIn from "./pages/stock-in/stock-in.tsx";
 import StockOut from "./pages/stock-out/stock-out.tsx";
@@ -21,6 +23,8 @@ import CategoryManagement from "./pages/category-management/category-management.
 import ProductManagement from "./pages/product-management/product-management.tsx";
 import Settings from "./pages/settings/settings.tsx";
 import Users from "./pages/users/users";
+import PurchaseRequest from "./pages/purchase-request/purchase-request";
+import GoodsReceipt from "./pages/goods-receipt/goods-receipt";
 import Login from "./pages/auth/login";
 import ForgotPassword from "./pages/auth/forgot-password";
 import ResetPassword from "./pages/auth/reset-password";
@@ -38,15 +42,15 @@ const queryClient = new QueryClient({
   }),
   defaultOptions: {
     queries: {
-      refetchOnWindowFocus: false,
-      retry: 1,
+      refetchOnWindowFocus: QUERY_CONFIG.REFETCH_ON_WINDOW_FOCUS,
+      retry: QUERY_CONFIG.RETRY,
     },
   },
 });
 
 const router = createBrowserRouter([
   {
-    path: "/",
+    path: routesConfig.home,
     element: (
       <ProtectedRoute>
         <RootLayout />
@@ -58,37 +62,45 @@ const router = createBrowserRouter([
         element: <Dashboard />,
       },
       {
-        path: "stock-in",
+        path: getPathSegment(routesConfig.app.stockIn),
         element: <StockIn />,
       },
       {
-        path: "stock-out",
+        path: getPathSegment(routesConfig.app.stockOut),
         element: <StockOut />,
       },
       {
-        path: "categories",
+        path: getPathSegment(routesConfig.app.purchaseRequests),
+        element: <PurchaseRequest />,
+      },
+      {
+        path: getPathSegment(routesConfig.app.goodsReceipts),
+        element: <GoodsReceipt />,
+      },
+      {
+        path: getPathSegment(routesConfig.app.categories),
         element: <CategoryManagement />,
       },
       {
-        path: "products",
+        path: getPathSegment(routesConfig.app.products),
         element: <ProductManagement />,
       },
       {
-        path: "stock-summary",
+        path: getPathSegment(routesConfig.app.stockSummary),
         element: <StockSummary />,
       },
       {
-        path: "users",
+        path: getPathSegment(routesConfig.app.users),
         element: <Users />,
       },
       {
-        path: "settings",
+        path: getPathSegment(routesConfig.app.settings),
         element: <Settings />,
       },
     ],
   },
   {
-    path: "/auth",
+    path: getPathSegment(routesConfig.auth.base),
     element: (
       <PublicRoute>
         <AuthLayout />
@@ -100,15 +112,15 @@ const router = createBrowserRouter([
         element: <Navigate to={routesConfig.auth.login} replace />,
       },
       {
-        path: "login",
+        path: getPathSegment(routesConfig.auth.login),
         element: <Login />,
       },
       {
-        path: "request-password-reset",
+        path: getPathSegment(routesConfig.auth.requestPasswordReset),
         element: <ForgotPassword />,
       },
       {
-        path: "reset-password/:resetToken",
+        path: getPathSegment(routesConfig.auth.resetPassword),
         element: <ResetPassword />,
       },
     ],
@@ -117,7 +129,7 @@ const router = createBrowserRouter([
 
 function App() {
   return (
-    <ThemeProvider defaultTheme="light" storageKey="odoo-ui-theme">
+    <ThemeProvider defaultTheme={DEFAULT_THEME} storageKey={THEME_STORAGE_KEY}>
       <QueryClientProvider client={queryClient}>
         <Toaster />
         <RouterProvider router={router} />

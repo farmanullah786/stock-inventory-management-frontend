@@ -1,35 +1,42 @@
 import { useMemo } from "react";
-import { useFetchStockOutRecords } from "@/hooks/use-stock-out";
+import { useFetchPurchaseRequests } from "@/hooks/use-purchase-request";
 import { useFetchProducts } from "@/hooks/use-products";
 import { useFetchUsers } from "@/hooks/use-user";
 import { useUser } from "@/store/use-user-store";
-import StockOutFormDialog from "../../components/stock-out-form/stock-out-form";
+import PurchaseRequestFormDialog from "../../components/purchase-request-form/purchase-request-form";
 import { canModifyInventory } from "@/lib/utils";
-import { stockOutColumns } from "@/components/stock-out/columns";
+import { purchaseRequestColumns } from "@/components/purchase-request/columns";
 import { usePaginationQuery } from "@/hooks/use-pagination-query";
 import { PageHeader } from "@/components/shared/page-header";
 import { FilterCard } from "@/components/shared/filter-card";
 import { SearchInput } from "@/components/shared/search-input";
-import { ProductFilter } from "@/components/shared/product-filter";
 import { DateRangeFilter } from "@/components/shared/date-range-filter";
 import { Container } from "@/components/shared/container";
 import { ServerDataTable } from "@/components/shared/data-table/server-data-table";
 import { ErrorDisplay } from "@/components/shared/error-display";
 import { TableSkeleton } from "@/components/shared/table-skeleton";
 import { IProduct, IUser } from "@/types/api";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useSearchParams } from "react-router-dom";
 
-const StockOut = () => {
+const PurchaseRequest = () => {
   const { searchParams, setSearchParams, queryOptions } = usePaginationQuery();
   const { user } = useUser();
 
   const {
-    data: stockOutRecords,
+    data: purchaseRequests,
     isPending,
     isFetching,
     isSuccess,
     isError,
     error,
-  } = useFetchStockOutRecords(queryOptions);
+  } = useFetchPurchaseRequests(queryOptions);
   const productsQuery = useFetchProducts();
   const usersQuery = useFetchUsers({ page: 1, limit: 1000 });
 
@@ -38,7 +45,7 @@ const StockOut = () => {
   const users = usersQuery.isSuccess ? usersQuery.data.data : [];
 
   const columns = useMemo(
-    () => stockOutColumns(products, users, user.role),
+    () => purchaseRequestColumns(products, users, user.role),
     [products, users, user.role]
   );
 
@@ -49,7 +56,7 @@ const StockOut = () => {
         <Container>
           <ErrorDisplay
             error={error}
-            title="Failed to load stock out records"
+            title="Failed to load purchase requests"
             onRetry={() => window.location.reload()}
           />
         </Container>
@@ -62,16 +69,16 @@ const StockOut = () => {
       <Header products={products} users={users} />
       <Container>
         <div className="space-y-4">
-          <StockOut.Filters products={products} />
+          <PurchaseRequest.Filters />
           {isPending ? (
             <TableSkeleton columnCount={columns.length} rowCount={10} />
           ) : isSuccess ? (
             <ServerDataTable
               columns={columns}
-              data={stockOutRecords.data}
+              data={purchaseRequests.data}
               searchParams={searchParams}
               setSearchParams={setSearchParams}
-              rowCount={stockOutRecords.pagination.rowCount}
+              rowCount={purchaseRequests.pagination.rowCount || 0}
               isFetching={isFetching && !isPending}
             />
           ) : null}
@@ -81,11 +88,61 @@ const StockOut = () => {
   );
 };
 
-StockOut.Filters = ({ products }: { products: IProduct[] }) => {
+PurchaseRequest.Filters = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const handleStatusChange = (value: string) => {
+    if (value === "all") {
+      searchParams.delete("status");
+    } else {
+      searchParams.set("status", value);
+    }
+    setSearchParams(searchParams);
+  };
+
+  const handlePriorityChange = (value: string) => {
+    if (value === "all") {
+      searchParams.delete("priority");
+    } else {
+      searchParams.set("priority", value);
+    }
+    setSearchParams(searchParams);
+  };
+
   return (
     <FilterCard>
       <SearchInput />
-      <ProductFilter products={products} />
+      <Select
+        value={searchParams.get("status") || "all"}
+        onValueChange={handleStatusChange}
+      >
+        <SelectTrigger className="w-full sm:w-48">
+          <SelectValue placeholder="All Status" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Status</SelectItem>
+          <SelectItem value="draft">Draft</SelectItem>
+          <SelectItem value="pending">Pending</SelectItem>
+          <SelectItem value="approved">Approved</SelectItem>
+          <SelectItem value="rejected">Rejected</SelectItem>
+          <SelectItem value="cancelled">Cancelled</SelectItem>
+        </SelectContent>
+      </Select>
+      <Select
+        value={searchParams.get("priority") || "all"}
+        onValueChange={handlePriorityChange}
+      >
+        <SelectTrigger className="w-full sm:w-48">
+          <SelectValue placeholder="All Priority" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Priority</SelectItem>
+          <SelectItem value="low">Low</SelectItem>
+          <SelectItem value="medium">Medium</SelectItem>
+          <SelectItem value="high">High</SelectItem>
+          <SelectItem value="urgent">Urgent</SelectItem>
+        </SelectContent>
+      </Select>
       <DateRangeFilter />
     </FilterCard>
   );
@@ -101,13 +158,13 @@ const Header = ({
   const { user } = useUser();
   return (
     <PageHeader
-      title="Stock Out"
+      title="Purchase Requests"
       actionButton={
         canModifyInventory(user?.role)
           ? {
-              label: "Add Stock Out",
+              label: "Create Purchase Request",
               dialog: (
-                <StockOutFormDialog
+                <PurchaseRequestFormDialog
                   action="create"
                   products={products}
                   users={users}
@@ -120,4 +177,5 @@ const Header = ({
   );
 };
 
-export default StockOut;
+export default PurchaseRequest;
+

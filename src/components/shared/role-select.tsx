@@ -7,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ROLES } from "@/constants";
 
 interface RoleSelectProps {
   paramName?: string;
@@ -14,7 +15,7 @@ interface RoleSelectProps {
   className?: string;
 }
 
-const ROLES = ["admin", "stock_manager", "stock_keeper", "viewer"];
+const ROLE_ARRAY = Object.values(ROLES);
 
 export const RoleSelect = ({
   paramName = "role",
@@ -47,7 +48,7 @@ export const RoleSelect = ({
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="all">All Roles</SelectItem>
-        {ROLES.map((role) => (
+        {ROLE_ARRAY.map((role) => (
           <SelectItem key={role} value={role} className="capitalize">
             {role.split("_").map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(" ")}
           </SelectItem>

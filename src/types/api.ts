@@ -35,10 +35,16 @@ export type IStockIn = BaseEntity & {
   month?: number;
   stockKeeperId?: number;
   createdBy: number;
+  purchaseRequestId?: number;
+  referenceNumber?: string;
+  location?: string;
+  scheduledDate?: string;
+  status?: "draft" | "validated" | "done" | "cancelled";
   remarks?: string;
   product?: IProduct;
   stockKeeper?: IUser;
   creator?: IUser;
+  purchaseRequest?: IPurchaseRequest;
 };
 
 export type IStockOut = BaseEntity & {
@@ -49,11 +55,20 @@ export type IStockOut = BaseEntity & {
   site?: string;
   technicianId?: number;
   createdBy: number;
+  status?: "draft" | "ready" | "done" | "cancelled";
+  validatedBy?: number;
+  validatedAt?: string;
+  referenceNumber?: string;
+  location?: string;
+  scheduledDate?: string;
+  requestNumber?: string;
+  destinationDocument?: string;
   remarks?: string;
   product?: IProduct;
   issuedTo?: IUser;
   technician?: IUser;
   creator?: IUser;
+  validator?: IUser;
 };
 
 export type IStockSummary = {
@@ -94,5 +109,69 @@ export type IUser = BaseEntity & {
   fullName: string;
   role?: string;
   status?: string;
+};
+
+export type IPurchaseRequestItem = BaseEntity & {
+  purchaseRequestId: number;
+  productId: number;
+  quantity: number;
+  quantityReceived?: number;
+  unitPrice?: number;
+  totalPrice?: number;
+  currency?: string;
+  justification?: string;
+  specifications?: string;
+  product?: IProduct;
+};
+
+export type IPurchaseRequest = BaseEntity & {
+  prNumber: string;
+  requestedBy: number;
+  requestedDate: string;
+  status: "draft" | "pending" | "approved" | "rejected" | "cancelled";
+  priority: "low" | "medium" | "high" | "urgent";
+  justification?: string;
+  totalEstimatedCost?: number;
+  currency?: string;
+  budgetCode?: string;
+  department?: string;
+  expectedDeliveryDate?: string;
+  approvedBy?: number;
+  approvedAt?: string;
+  rejectedBy?: number;
+  rejectedAt?: string;
+  rejectionReason?: string;
+  remarks?: string;
+  requester?: IUser;
+  approver?: IUser;
+  rejector?: IUser;
+  items?: IPurchaseRequestItem[];
+  goodsReceipts?: IGoodsReceipt[];
+};
+
+export type IGoodsReceiptItem = BaseEntity & {
+  goodsReceiptId: number;
+  productId: number;
+  quantityReceived: number;
+  quantityExpected: number;
+  condition: "good" | "damaged" | "missing" | "expired";
+  remarks?: string;
+  product?: IProduct;
+};
+
+export type IGoodsReceipt = BaseEntity & {
+  grnNumber: string;
+  purchaseRequestId?: number;
+  receivedDate: string;
+  receivedBy: number;
+  verifiedBy?: number;
+  status: "pending" | "partial" | "complete" | "rejected";
+  condition: "good" | "damaged" | "missing" | "expired";
+  remarks?: string;
+  rejectionReason?: string;
+  purchaseRequest?: IPurchaseRequest;
+  receiver?: IUser;
+  verifier?: IUser;
+  items?: IGoodsReceiptItem[];
 };
 

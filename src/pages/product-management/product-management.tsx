@@ -5,7 +5,7 @@ import { ICategory } from "@/types/api";
 import { useUser } from "@/store/use-user-store";
 import ProductFormDialog from "../../components/product-form/product-form";
 import { canManageProducts } from "@/lib/utils";
-import { createProductColumns } from "@/components/product/columns";
+import { productColumns } from "@/components/product/columns";
 import { usePaginationQuery } from "@/hooks/use-pagination-query";
 import { PageHeader } from "@/components/shared/page-header";
 import { FilterCard } from "@/components/shared/filter-card";
@@ -24,7 +24,7 @@ const ProductManagement = () => {
     useFetchProducts(queryOptions);
 
   const { user } = useUser();
-  const columns = useMemo(() => createProductColumns(user.role), [user.role]);
+  const columns = useMemo(() => productColumns(user.role), [user.role]);
 
   const categories = useFetchCategories({
     isActive: true,

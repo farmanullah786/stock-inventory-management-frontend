@@ -11,9 +11,12 @@ export const stockInSchema = z.object({
   invoiceNo: z.string().optional(),
   vendorName: z.string().optional(),
   grnNo: z.string().optional(),
-  year: z.number().int().min(2000).max(2100).optional(),
-  month: z.number().int().min(1).max(12).optional(),
+  year: z.number().int().min(2000).max(2100).optional(), // Auto-calculated from date, not shown in form
+  month: z.number().int().min(1).max(12).optional(), // Auto-calculated from date, not shown in form
   stockKeeperId: z.number().optional(),
+  location: z.string().optional(),
+  scheduledDate: z.string().optional(),
+  status: z.enum(["draft", "validated", "done", "cancelled"]).optional(),
   remarks: z.string().optional(),
 });
 

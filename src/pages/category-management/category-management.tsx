@@ -3,7 +3,7 @@ import { useFetchCategories } from "@/hooks/use-categories";
 import { useUser } from "@/store/use-user-store";
 import CategoryFormDialog from "../../components/category-form/category-form";
 import { canManageProducts } from "@/lib/utils";
-import { createCategoryColumns } from "@/components/category/columns";
+import { categoryColumns } from "@/components/category/columns";
 import { usePaginationQuery } from "@/hooks/use-pagination-query";
 import { PageHeader } from "@/components/shared/page-header";
 import { FilterCard } from "@/components/shared/filter-card";
@@ -21,7 +21,7 @@ const CategoryManagement = () => {
     useFetchCategories(queryOptions);
 
   const { user } = useUser();
-  const columns = useMemo(() => createCategoryColumns(user.role), [user.role]);
+  const columns = useMemo(() => categoryColumns(user.role), [user.role]);
 
   if (isError) {
     return (

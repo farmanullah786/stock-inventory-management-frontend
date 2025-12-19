@@ -7,9 +7,8 @@ import {
 import { toast } from "sonner";
 import { closeDialog } from "@/components/ui/dialog";
 import { productServices } from "@/services/product-services";
-import { QueryParams, MutationResponse, PaginatedResponse } from "@/types";
+import { QueryParams, MutationResponse } from "@/types";
 import { IProduct } from "@/types/api";
-import { ProductFormData } from "@/schemas/product-schema";
 
 // QUERY KEYS
 export const productKeys = {

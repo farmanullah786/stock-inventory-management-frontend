@@ -31,6 +31,21 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/ui/date-picker";
 import { useAddStockIn, useUpdateStockIn } from "@/hooks/use-stock-in";
+import { useUser } from "@/store/use-user-store";
+import { ROLES, STOCK_IN_STATUS, DEFAULT_CURRENCY, CURRENCIES } from "@/constants";
+
+const content = {
+  create: {
+    title: "Add Stock In",
+    description: "Record incoming stock by filling out the details below.",
+    btnTitle: "Create Record",
+  },
+  update: {
+    title: "Update Stock In",
+    description: "Modify stock in record details as needed.",
+    btnTitle: "Save Changes",
+  },
+};
 
 const defaultValues = {
   productId: 0,
@@ -38,14 +53,15 @@ const defaultValues = {
   quantity: 0,
   unitPrice: 0,
   totalPrice: 0,
-  currency: "AFN",
+  currency: DEFAULT_CURRENCY,
   poNumber: "",
   invoiceNo: "",
   vendorName: "",
   grnNo: "",
-  year: new Date().getFullYear(),
-  month: new Date().getMonth() + 1,
   stockKeeperId: undefined,
+  location: "",
+  scheduledDate: undefined,
+  status: STOCK_IN_STATUS.VALIDATED,
   remarks: "",
 };
 
@@ -57,14 +73,27 @@ type StockInFormProps =
       stockInId: number;
       products: IProduct[];
       users: IUser[];
+      recordStatus?: string;
+      referenceNumber?: string;
+      purchaseRequestId?: number;
     };
 
 export function StockInFormDialog(props: StockInFormProps) {
   const { action, products, users } = props;
+  const { user } = useUser();
+  const isReadOnly = action === "update" && (props.recordStatus === STOCK_IN_STATUS.DONE || props.recordStatus === STOCK_IN_STATUS.CANCELLED);
+
+  // Set default status based on user role (Odoo-style approval workflow)
+  // Stock Keepers create as draft, Managers/Admins create as validated
+  const defaultStatus: "draft" | "validated" = user.role === ROLES.STOCK_KEEPER ? STOCK_IN_STATUS.DRAFT : STOCK_IN_STATUS.VALIDATED;
+  const formDefaultValues = {
+    ...defaultValues,
+    status: action === "create" ? defaultStatus : (defaultValues.status as "draft" | "validated"),
+  };
 
   const form = useForm<StockInFormData>({
     resolver: zodResolver(stockInSchema),
-    defaultValues,
+    defaultValues: formDefaultValues,
     values: action === "update" ? props.stockIn : undefined,
   });
 
@@ -77,12 +106,7 @@ export function StockInFormDialog(props: StockInFormProps) {
       data.totalPrice = data.unitPrice * data.quantity;
     }
     
-    // Extract year and month from date if not provided
-    if (data.date && !data.year) {
-      const dateObj = new Date(data.date);
-      data.year = dateObj.getFullYear();
-      data.month = dateObj.getMonth() + 1;
-    }
+    // Year and month are auto-calculated in backend from date field
 
     if (action === "update") {
       updateMutation.mutate({ id: props.stockInId, data });
@@ -91,14 +115,9 @@ export function StockInFormDialog(props: StockInFormProps) {
     addMutation.mutate(data);
   };
 
-  const isPending = addMutation.isPending || updateMutation.isPending;
+  const { title, description, btnTitle } = content[action];
 
-  const title = action === "update" ? "Edit Stock In" : "Add Stock In";
-  const description =
-    action === "update"
-      ? "Modify stock in record details as needed."
-      : "Record incoming stock by filling out the details below.";
-  const btnTitle = action === "update" ? "Save Changes" : "Create Record";
+  const isPending = addMutation.isPending || updateMutation.isPending;
 
   return (
     <DialogContent
@@ -110,13 +129,18 @@ export function StockInFormDialog(props: StockInFormProps) {
         <DialogDescription>{description}</DialogDescription>
       </DialogHeader>
 
-        <DialogBody>
-          <Form {...form}>
-            <form
-              id="stock-in-form"
-              onSubmit={form.handleSubmit(onSubmit)}
-              className="space-y-4"
-            >
+      <DialogBody>
+        {action === "update" && props.referenceNumber && (
+          <div className="mb-4 p-3 bg-muted rounded-md">
+            <p className="text-sm font-medium">Reference Number: <span className="font-mono">{props.referenceNumber}</span></p>
+          </div>
+        )}
+        <Form {...form}>
+          <form
+            id="stock-in-form"
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-4"
+          >
               <FormField
                 control={form.control}
                 name="productId"
@@ -126,6 +150,7 @@ export function StockInFormDialog(props: StockInFormProps) {
                     <Select
                       onValueChange={(value) => field.onChange(parseInt(value))}
                       value={field.value ? String(field.value) : undefined}
+                      disabled={isReadOnly || (action === "update" && props.purchaseRequestId)}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -155,7 +180,7 @@ export function StockInFormDialog(props: StockInFormProps) {
                   <FormItem>
                     <FormLabel>Date</FormLabel>
                     <FormControl>
-                      <DatePicker placeholder="Select date" {...field} />
+                      <DatePicker placeholder="Select date" {...field} disabled={isReadOnly} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -175,6 +200,7 @@ export function StockInFormDialog(props: StockInFormProps) {
                         min="0.01"
                         placeholder="Enter quantity"
                         {...field}
+                        disabled={isReadOnly}
                         onChange={(e) => {
                           const value = parseFloat(e.target.value) || 0;
                           field.onChange(value);
@@ -206,6 +232,7 @@ export function StockInFormDialog(props: StockInFormProps) {
                           min="0"
                           placeholder="0"
                           {...field}
+                          disabled={isReadOnly}
                           onChange={(e) => {
                             const value = parseFloat(e.target.value) || 0;
                             field.onChange(value);
@@ -236,6 +263,7 @@ export function StockInFormDialog(props: StockInFormProps) {
                           min="0"
                           placeholder="0"
                           {...field}
+                          disabled={isReadOnly}
                           onChange={(e) =>
                             field.onChange(parseFloat(e.target.value) || 0)
                           }
@@ -257,7 +285,8 @@ export function StockInFormDialog(props: StockInFormProps) {
                       <FormLabel>Currency</FormLabel>
                       <Select
                         onValueChange={field.onChange}
-                        defaultValue={field.value || "AFN"}
+                        defaultValue={field.value || DEFAULT_CURRENCY}
+                        disabled={isReadOnly}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -265,10 +294,10 @@ export function StockInFormDialog(props: StockInFormProps) {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="AFN">AFN</SelectItem>
-                          <SelectItem value="USD">USD</SelectItem>
-                          <SelectItem value="EUR">EUR</SelectItem>
-                          <SelectItem value="PKR">PKR</SelectItem>
+                          <SelectItem value={CURRENCIES.AFN}>{CURRENCIES.AFN}</SelectItem>
+                          <SelectItem value={CURRENCIES.USD}>{CURRENCIES.USD}</SelectItem>
+                          <SelectItem value={CURRENCIES.EUR}>{CURRENCIES.EUR}</SelectItem>
+                          <SelectItem value={CURRENCIES.PKR}>{CURRENCIES.PKR}</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -283,7 +312,7 @@ export function StockInFormDialog(props: StockInFormProps) {
                     <FormItem>
                       <FormLabel>Vendor Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Vendor name" {...field} />
+                        <Input placeholder="Vendor name" {...field} disabled={isReadOnly} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -299,7 +328,7 @@ export function StockInFormDialog(props: StockInFormProps) {
                     <FormItem>
                       <FormLabel>PO Number</FormLabel>
                       <FormControl>
-                        <Input placeholder="PO Number" {...field} />
+                        <Input placeholder="PO Number" {...field} disabled={isReadOnly} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -313,7 +342,7 @@ export function StockInFormDialog(props: StockInFormProps) {
                     <FormItem>
                       <FormLabel>Invoice N/O</FormLabel>
                       <FormControl>
-                        <Input placeholder="Invoice Number" {...field} />
+                        <Input placeholder="Invoice Number" {...field} disabled={isReadOnly} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -329,7 +358,11 @@ export function StockInFormDialog(props: StockInFormProps) {
                     <FormItem>
                       <FormLabel>GRN N/O</FormLabel>
                       <FormControl>
-                        <Input placeholder="GRN Number" {...field} />
+                        <Input 
+                          placeholder="GRN Number" 
+                          {...field} 
+                          disabled={isReadOnly || (action === "update" && props.purchaseRequestId)} 
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -347,6 +380,7 @@ export function StockInFormDialog(props: StockInFormProps) {
                           field.onChange(value === "none" ? undefined : parseInt(value))
                         }
                         value={field.value?.toString() || "none"}
+                        disabled={isReadOnly}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -371,22 +405,12 @@ export function StockInFormDialog(props: StockInFormProps) {
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="year"
+                  name="location"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Year</FormLabel>
+                      <FormLabel>Location/Warehouse</FormLabel>
                       <FormControl>
-                        <Input
-                          type="number"
-                          min="2000"
-                          max="2100"
-                          placeholder="Year"
-                          {...field}
-                          onChange={(e) =>
-                            field.onChange(parseInt(e.target.value) || undefined)
-                          }
-                          value={field.value || ""}
-                        />
+                        <Input placeholder="Storage location" {...field} disabled={isReadOnly} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -395,45 +419,18 @@ export function StockInFormDialog(props: StockInFormProps) {
 
                 <FormField
                   control={form.control}
-                  name="month"
+                  name="scheduledDate"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Month</FormLabel>
-                      <Select
-                        onValueChange={(value) =>
-                          field.onChange(parseInt(value))
-                        }
-                        value={field.value ? String(field.value) : undefined}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select month" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {[
-                            "January",
-                            "February",
-                            "March",
-                            "April",
-                            "May",
-                            "June",
-                            "July",
-                            "August",
-                            "September",
-                            "October",
-                            "November",
-                            "December",
-                          ].map((month, index) => (
-                            <SelectItem
-                              key={month}
-                              value={String(index + 1)}
-                            >
-                              {month}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormLabel>Scheduled Date</FormLabel>
+                      <FormControl>
+                        <DatePicker 
+                          placeholder="Expected arrival date" 
+                          {...field}
+                          value={field.value || undefined}
+                          disabled={isReadOnly}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -451,22 +448,25 @@ export function StockInFormDialog(props: StockInFormProps) {
                         placeholder="Additional notes or comments"
                         rows="3"
                         {...field}
+                        disabled={isReadOnly}
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            </form>
-          </Form>
-        </DialogBody>
+          </form>
+        </Form>
+      </DialogBody>
 
-        <DialogFooter>
-          <DialogClose>Cancel</DialogClose>
-          <Button disabled={isPending} form="stock-in-form" type="submit">
-            {isPending ? "Saving..." : btnTitle}
+      <DialogFooter>
+        <DialogClose>Cancel</DialogClose>
+        {!isReadOnly && (
+          <Button disabled={isPending} form="stock-in-form">
+            {btnTitle}
           </Button>
-        </DialogFooter>
+        )}
+      </DialogFooter>
     </DialogContent>
   );
 };

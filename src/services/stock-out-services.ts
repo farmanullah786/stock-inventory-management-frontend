@@ -1,6 +1,6 @@
 import { apiClient } from "./api-client";
 import { generateEndPoint } from "@/lib/utils";
-import { IStockOut, MutationResponse, PaginatedResponse, QueryParams } from "@/types";
+import { IStockOut, MutationResponse, PaginatedResponse } from "@/types";
 import { QueryFunctionContext } from "@tanstack/react-query";
 import { stockOutKeys } from "@/hooks/use-stock-out";
 import { StockOutFormData } from "@/schemas/stock-out-schema";
@@ -32,5 +32,8 @@ export const stockOutServices = {
 
   deleteStockOut: (id: number): Promise<MutationResponse> =>
     apiClient.delete(`stock-out/${id}`),
+
+  validateStockOut: (id: number): Promise<MutationResponse<IStockOut>> =>
+    apiClient.post(`stock-out/${id}/validate`),
 };
 

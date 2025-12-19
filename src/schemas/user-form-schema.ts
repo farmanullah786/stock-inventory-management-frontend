@@ -1,7 +1,8 @@
 import { z } from "zod";
+import { ROLES, GENERAL_STATUS } from "@/constants";
 
-const ROLES = ["admin", "stock_manager", "stock_keeper", "viewer"] as const;
-const STATUS_OPTIONS = ["active", "inactive"] as const;
+const ROLE_ARRAY = [ROLES.ADMIN, ROLES.STOCK_MANAGER, ROLES.STOCK_KEEPER, ROLES.VIEWER] as const;
+const STATUS_OPTIONS = [GENERAL_STATUS.ACTIVE, GENERAL_STATUS.INACTIVE] as const;
 
 export const baseSchema = z.object({
   imageUrl: z.string().optional(),
@@ -12,7 +13,7 @@ export const baseSchema = z.object({
     .min(1, { message: "Email is required." })
     .email({ message: "Invalid email address." }),
   phoneNumber: z.string().optional(),
-  role: z.enum(ROLES, {
+  role: z.enum(ROLE_ARRAY, {
     required_error: "Please select a role",
   }),
   status: z.enum(STATUS_OPTIONS, {

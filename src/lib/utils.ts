@@ -1,10 +1,29 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { Column } from "@tanstack/react-table";
+import {
+  ROLES,
+  DEFAULT_CURRENCY,
+  CURRENCIES,
+  AFN_TO_USD_RATE,
+  EXCEL_COLORS,
+  EXCEL_SHEET_NAMES,
+  EXCEL_LIMITS,
+  STOCK_CONDITIONS,
+  GENERAL_STATUS,
+} from "@/constants";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+/**
+ * Extracts the path segment from a full route path
+ * Example: "/stock-in" -> "stock-in", "/auth/login" -> "login"
+ */
+export const getPathSegment = (fullPath: string): string => {
+  return fullPath.replace(/^\//, "");
+};
 
 export const generateEndPoint = (
   baseEndpoint: string,
@@ -103,13 +122,13 @@ export const capitalizeWords = (str: string): string => {
 
 export const getRoleBadgeColor = (role: string) => {
   switch (role) {
-    case "admin":
+    case ROLES.ADMIN:
       return "default";
-    case "stock_manager":
+    case ROLES.STOCK_MANAGER:
       return "default";
-    case "stock_keeper":
+    case ROLES.STOCK_KEEPER:
       return "secondary";
-    case "viewer":
+    case ROLES.VIEWER:
       return "outline";
     default:
       return "secondary";
@@ -117,15 +136,15 @@ export const getRoleBadgeColor = (role: string) => {
 };
 
 export const isAdmin = (role: string | undefined): boolean => {
-  return role === "admin";
+  return role === ROLES.ADMIN;
 };
 
 export const isAdminOrManager = (role: string | undefined): boolean => {
-  return role === "admin" || role === "stock_manager";
+  return role === ROLES.ADMIN || role === ROLES.STOCK_MANAGER;
 };
 
 export const isAdminOrManagerOrKeeper = (role: string | undefined): boolean => {
-  return role === "admin" || role === "stock_manager" || role === "stock_keeper";
+  return role === ROLES.ADMIN || role === ROLES.STOCK_MANAGER || role === ROLES.STOCK_KEEPER;
 };
 
 export const canModifyInventory = (role: string | undefined): boolean => {
@@ -150,9 +169,9 @@ export const canManageUsers = (role: string | undefined): boolean => {
 
 export const getStatusBadgeColor = (status: string) => {
   switch (status) {
-    case "active":
+    case GENERAL_STATUS.ACTIVE:
       return "default";
-    case "inactive":
+    case GENERAL_STATUS.INACTIVE:
       return "destructive";
     default:
       return "secondary";
@@ -355,7 +374,7 @@ const styleHeaderRow = (worksheet: any) => {
     cell.fill = {
       type: "pattern",
       pattern: "solid",
-      fgColor: { argb: "FFE8F5E9" }, // Light green background
+      fgColor: { argb: EXCEL_COLORS.HEADER_BG },
     };
   });
 };
@@ -369,7 +388,7 @@ const addDataRows = (worksheet: any, items: any[]) => {
       totalIn: parseFloat((item.totalIn || 0).toFixed(2)),
       unitPrice: parseFloat((item.unitPrice || 0).toFixed(2)),
       totalPrice: parseFloat((item.totalPrice || 0).toFixed(2)),
-      currency: item.currency || "AFN",
+      currency: item.currency || DEFAULT_CURRENCY,
       poNumber: item.poNumber || "-",
       invoiceNo: item.invoiceNo || "-",
       vendorName: item.vendorName || "-",
@@ -410,7 +429,7 @@ export const exportToExcel = async (
 
   // Group data by category
   const groupedByCategory = data.reduce((acc, item) => {
-    const category = item.category || "Uncategorized";
+    const category = item.category || EXCEL_SHEET_NAMES.UNCATEGORIZED;
     if (!acc[category]) {
       acc[category] = [];
     }
@@ -421,34 +440,31 @@ export const exportToExcel = async (
   // Sort categories alphabetically
   const sortedCategories = Object.keys(groupedByCategory).sort();
 
-  // Currency conversion rate (AFN to USD) - default 75 AFN = 1 USD
-  const AFN_TO_USD_RATE = 75;
-
   // Helper function to convert price to AFN
   const convertToAFN = (price: number, currency: string): number => {
     if (!price) return 0;
-    if (currency === "AFN") return price;
-    if (currency === "USD") return price * AFN_TO_USD_RATE;
+    if (currency === CURRENCIES.AFN) return price;
+    if (currency === CURRENCIES.USD) return price * AFN_TO_USD_RATE;
     return price; // Default to AFN if unknown currency
   };
 
   // Helper function to convert price to USD
   const convertToUSD = (price: number, currency: string): number => {
     if (!price) return 0;
-    if (currency === "USD") return price;
-    if (currency === "AFN") return price / AFN_TO_USD_RATE;
+    if (currency === CURRENCIES.USD) return price;
+    if (currency === CURRENCIES.AFN) return price / AFN_TO_USD_RATE;
     return price / AFN_TO_USD_RATE; // Default conversion
   };
 
   // Helper function to get condition
   const getCondition = (availableStock: number): string => {
-    if (availableStock <= 0) return "Out of Stock";
-    if (availableStock < 10) return "Low";
-    return "In Stock";
+    if (availableStock <= 0) return STOCK_CONDITIONS.OUT_OF_STOCK;
+    if (availableStock < STOCK_CONDITIONS.LOW_STOCK_THRESHOLD) return STOCK_CONDITIONS.LOW;
+    return STOCK_CONDITIONS.IN_STOCK;
   };
 
   // Create summary sheet first with products organized by category
-  const summarySheet = workbook.addWorksheet("Stock Summary");
+  const summarySheet = workbook.addWorksheet(EXCEL_SHEET_NAMES.STOCK_SUMMARY);
   defineSummaryColumns(summarySheet);
   styleHeaderRow(summarySheet);
 
@@ -465,12 +481,12 @@ export const exportToExcel = async (
         acc.totalIn += item.totalIn || 0;
         acc.totalOut += item.totalOut || 0;
         acc.availableStock += item.availableStock || 0;
-        acc.totalPriceAF += convertToAFN(item.totalPrice || 0, item.currency || "AFN");
-        acc.totalPriceUSD += convertToUSD(item.totalPrice || 0, item.currency || "AFN");
+        acc.totalPriceAF += convertToAFN(item.totalPrice || 0, item.currency || DEFAULT_CURRENCY);
+        acc.totalPriceUSD += convertToUSD(item.totalPrice || 0, item.currency || DEFAULT_CURRENCY);
         // Calculate average unit price
         if (item.unitPrice !== undefined && item.unitPrice !== null) {
-          acc.unitPriceAFSum += convertToAFN(item.unitPrice || 0, item.currency || "AFN");
-          acc.unitPriceUSDSum += convertToUSD(item.unitPrice || 0, item.currency || "AFN");
+          acc.unitPriceAFSum += convertToAFN(item.unitPrice || 0, item.currency || DEFAULT_CURRENCY);
+          acc.unitPriceUSDSum += convertToUSD(item.unitPrice || 0, item.currency || DEFAULT_CURRENCY);
           acc.unitPriceCount += 1;
         }
         return acc;
@@ -506,10 +522,10 @@ export const exportToExcel = async (
       const openingBalancePlusPurchased = openingStock + totalIn;
 
       // Convert prices to AFN and USD
-      const unitPriceAF = convertToAFN(item.unitPrice || 0, item.currency || "AFN");
-      const totalPriceAF = convertToAFN(item.totalPrice || 0, item.currency || "AFN");
-      const unitPriceUSD = convertToUSD(item.unitPrice || 0, item.currency || "AFN");
-      const totalPriceUSD = convertToUSD(item.totalPrice || 0, item.currency || "AFN");
+      const unitPriceAF = convertToAFN(item.unitPrice || 0, item.currency || DEFAULT_CURRENCY);
+      const totalPriceAF = convertToAFN(item.totalPrice || 0, item.currency || DEFAULT_CURRENCY);
+      const unitPriceUSD = convertToUSD(item.unitPrice || 0, item.currency || DEFAULT_CURRENCY);
+      const totalPriceUSD = convertToUSD(item.totalPrice || 0, item.currency || DEFAULT_CURRENCY);
 
       summarySheet.addRow({
         no: rowNumber,
@@ -556,7 +572,7 @@ export const exportToExcel = async (
       cell.fill = {
         type: "pattern",
         pattern: "solid",
-        fgColor: { argb: "FFF0F0F0" }, // Light gray background
+        fgColor: { argb: EXCEL_COLORS.SUBTOTAL_BG },
       };
     });
 
@@ -572,12 +588,12 @@ export const exportToExcel = async (
         acc.totalIn += item.totalIn || 0;
         acc.totalOut += item.totalOut || 0;
         acc.availableStock += item.availableStock || 0;
-        acc.totalPriceAF += convertToAFN(item.totalPrice || 0, item.currency || "AFN");
-        acc.totalPriceUSD += convertToUSD(item.totalPrice || 0, item.currency || "AFN");
+        acc.totalPriceAF += convertToAFN(item.totalPrice || 0, item.currency || DEFAULT_CURRENCY);
+        acc.totalPriceUSD += convertToUSD(item.totalPrice || 0, item.currency || DEFAULT_CURRENCY);
         // Calculate average unit price - include all items
         if (item.unitPrice !== undefined && item.unitPrice !== null) {
-          acc.unitPriceAFSum += convertToAFN(item.unitPrice || 0, item.currency || "AFN");
-          acc.unitPriceUSDSum += convertToUSD(item.unitPrice || 0, item.currency || "AFN");
+          acc.unitPriceAFSum += convertToAFN(item.unitPrice || 0, item.currency || DEFAULT_CURRENCY);
+          acc.unitPriceUSDSum += convertToUSD(item.unitPrice || 0, item.currency || DEFAULT_CURRENCY);
           acc.unitPriceCount += 1;
         }
         return acc;
@@ -630,11 +646,11 @@ export const exportToExcel = async (
 
     // Style totals row
     totalsRow.eachCell((cell: any) => {
-      cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+      cell.font = { bold: true, color: { argb: EXCEL_COLORS.TOTAL_TEXT } };
       cell.fill = {
         type: "pattern",
         pattern: "solid",
-        fgColor: { argb: "FF1B5E20" }, // Darker green background
+        fgColor: { argb: EXCEL_COLORS.TOTAL_BG },
       };
     });
   }
@@ -644,7 +660,7 @@ export const exportToExcel = async (
     const categoryItems = groupedByCategory[category];
     
     // Create worksheet with category name (Excel sheet names have 31 char limit)
-    const sheetName = category.length > 31 ? category.substring(0, 31) : category;
+    const sheetName = category.length > EXCEL_LIMITS.MAX_SHEET_NAME_LENGTH ? category.substring(0, EXCEL_LIMITS.MAX_SHEET_NAME_LENGTH) : category;
     const worksheet = workbook.addWorksheet(sheetName);
 
     // Define columns
@@ -719,7 +735,7 @@ export const exportToExcel = async (
       cell.fill = {
         type: "pattern",
         pattern: "solid",
-        fgColor: { argb: "FFF0F0F0" }, // Light gray background
+        fgColor: { argb: EXCEL_COLORS.SUBTOTAL_BG },
       };
     });
 

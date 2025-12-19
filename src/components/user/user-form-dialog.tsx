@@ -94,10 +94,7 @@ export function UserForm(props: UserFormProps) {
   const isPending = addMutation.isPending || updateMutation.isPending;
 
   return (
-    <DialogContent
-      className="max-w-md"
-      onCloseAutoFocus={() => form.reset()}
-    >
+    <DialogContent className="max-w-md" onCloseAutoFocus={() => form.reset()}>
       <DialogHeader>
         <DialogTitle>{title}</DialogTitle>
         <DialogDescription>{description}</DialogDescription>
@@ -105,7 +102,11 @@ export function UserForm(props: UserFormProps) {
 
       <DialogBody>
         <Form {...form}>
-          <form id="user-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form
+            id="user-form"
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-4"
+          >
             {/* Name Fields */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
@@ -188,15 +189,17 @@ export function UserForm(props: UserFormProps) {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {["admin", "stock_manager", "stock_keeper", "viewer"].map((role) => (
-                        <SelectItem
-                          key={role}
-                          value={role}
-                          className="capitalize"
-                        >
-                          {capitalizeWords(role)}
-                        </SelectItem>
-                      ))}
+                      {["admin", "stock_manager", "stock_keeper", "viewer"].map(
+                        (role) => (
+                          <SelectItem
+                            key={role}
+                            value={role}
+                            className="capitalize"
+                          >
+                            {capitalizeWords(role)}
+                          </SelectItem>
+                        )
+                      )}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -280,4 +283,3 @@ export function UserForm(props: UserFormProps) {
     </DialogContent>
   );
 }
-

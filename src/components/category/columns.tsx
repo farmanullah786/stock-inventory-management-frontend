@@ -23,8 +23,8 @@ import {
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
-export const createCategoryColumns = (
-  userRole?: string
+export const categoryColumns = (
+  userRole: string
 ): ColumnDef<ICategory>[] => {
   const canEdit = canManageProducts(userRole);
   const canDeleteCategory = canDelete(userRole);

@@ -15,21 +15,34 @@ import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { DataTableColumnHeader } from "../shared/data-table/data-table-column-header";
 import StockOutFormDialog from "../stock-out-form/stock-out-form";
-import { canDelete, canModifyInventory, formatDate } from "@/lib/utils";
+import { canDelete, canModifyInventory, formatDate, isAdminOrManager } from "@/lib/utils";
+import { getStockOutStatusBadge } from "@/lib/badge-helpers";
 import { DeleteStockOutAlert } from "./delete-stock-out-alert";
 import { IDialogType } from "@/types";
 import { useState } from "react";
 import { TruncatedText } from "../shared/truncated-text";
 import { CreatorCell } from "../shared/creator-cell";
+import { useValidateStockOut } from "@/hooks/use-stock-out";
+import {
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogBody,
+} from "@/components/ui/dialog";
 
-export const createStockOutColumns = (
+
+export const stockOutColumns = (
   products: IProduct[] = [],
   users: IUser[] = [],
-  userRole?: string
+  userRole: string
 ): ColumnDef<IStockOut>[] => {
   const canEdit = canModifyInventory(userRole);
   const canDeleteStockOut = canDelete(userRole);
-  const showActions = canEdit || canDeleteStockOut;
+  const canValidate = isAdminOrManager(userRole);
+  const showActions = canEdit || canDeleteStockOut || canValidate;
 
   const columns: ColumnDef<IStockOut>[] = [
     {
@@ -38,6 +51,17 @@ export const createStockOutColumns = (
         <DataTableColumnHeader column={column} title="ID" className="min-w-5" />
       ),
       maxSize: 40,
+    },
+    {
+      accessorKey: "referenceNumber",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Reference" />
+      ),
+      cell: ({ row }) => (
+        <Badge variant="outline">
+          {row.original.referenceNumber || "-"}
+        </Badge>
+      ),
     },
     {
       accessorKey: "product.name",
@@ -106,6 +130,13 @@ export const createStockOutColumns = (
       },
     },
     {
+      accessorKey: "status",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Status" />
+      ),
+      cell: ({ row }) => getStockOutStatusBadge(row.original.status || "draft"),
+    },
+    {
       accessorKey: "date",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Date" />
@@ -148,6 +179,7 @@ export const createStockOutColumns = (
           users={users}
           canEdit={canEdit}
           canDelete={canDeleteStockOut}
+          canValidate={canValidate}
         />
       ),
       maxSize: 30,
@@ -157,25 +189,77 @@ export const createStockOutColumns = (
   return columns;
 };
 
+const ValidateStockOutDialog = ({
+  stockOutId,
+  record,
+}: {
+  stockOutId: number;
+  record: IStockOut;
+}) => {
+  const validateMutation = useValidateStockOut();
+
+  const handleValidate = () => {
+    validateMutation.mutate(stockOutId);
+  };
+
+  return (
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>Validate Stock Out</DialogTitle>
+        <DialogDescription>
+          Validate this stock out record. Stock will be deducted upon validation.
+        </DialogDescription>
+      </DialogHeader>
+      <DialogBody>
+        <div className="space-y-2">
+          <p className="text-sm text-muted-foreground">
+            <strong>Product:</strong> {record.product?.name}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            <strong>Quantity:</strong> {record.quantity} {record.product?.unit}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Are you sure you want to validate this stock out record? This action will deduct the stock from inventory.
+          </p>
+        </div>
+      </DialogBody>
+      <DialogFooter>
+        <DialogClose asChild>
+          <Button variant="outline">Cancel</Button>
+        </DialogClose>
+        <Button onClick={handleValidate} disabled={validateMutation.isPending}>
+          {validateMutation.isPending ? "Validating..." : "Validate"}
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  );
+};
+
 const ActionsRow = ({
   record,
   products,
   users,
   canEdit,
   canDelete: canDeleteStockOut,
+  canValidate,
 }: {
   record: IStockOut;
   products: IProduct[];
   users: IUser[];
   canEdit: boolean;
   canDelete: boolean;
+  canValidate: boolean;
 }) => {
   const [dialogType, setDialogType] = useState<IDialogType>("None");
 
   const handleDialogType = (type: IDialogType) => setDialogType(type);
 
-  const hasAnyAction = canEdit || canDeleteStockOut;
+  const hasAnyAction = canEdit || canDeleteStockOut || canValidate;
   if (!hasAnyAction) return null;
+
+  const canUpdate = (record.status === "draft" || record.status === "ready") && canEdit;
+  const canValidateRecord = (record.status === "draft" || record.status === "ready") && !record.validatedBy && canValidate;
+  const canDeleteRecord = (record.status === "draft" || record.status === "ready") && canDeleteStockOut;
 
   return (
     <Dialog>
@@ -188,23 +272,32 @@ const ActionsRow = ({
             </Button>
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent align="end" className="w-32">
+          <DropdownMenuContent align="end" className="w-40">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {canEdit && (
+            {canUpdate && (
               <DialogTrigger asChild>
                 <DropdownMenuItem onClick={() => handleDialogType("Update")}>
                   Edit
                 </DropdownMenuItem>
               </DialogTrigger>
             )}
-            {/* {canEdit && canDeleteStockOut && <DropdownMenuSeparator />} */}
-            {canDeleteStockOut && (
-              <AlertDialogTrigger asChild>
-                <DropdownMenuItem onClick={() => handleDialogType("Delete")}>
-                  Delete
+            {canValidateRecord && (
+              <DialogTrigger asChild>
+                <DropdownMenuItem onClick={() => handleDialogType("Validate")}>
+                  Validate
                 </DropdownMenuItem>
-              </AlertDialogTrigger>
+              </DialogTrigger>
+            )}
+            {canDeleteRecord && (
+              <>
+                <DropdownMenuSeparator />
+                <AlertDialogTrigger asChild>
+                  <DropdownMenuItem onClick={() => handleDialogType("Delete")}>
+                    Delete
+                  </DropdownMenuItem>
+                </AlertDialogTrigger>
+              </>
             )}
           </DropdownMenuContent>
         </DropdownMenu>
@@ -223,12 +316,20 @@ const ActionsRow = ({
             issuedToId: record.issuedToId,
             site: record.site,
             technicianId: record.technicianId,
+            status: record.status,
+            location: record.location || "",
+            scheduledDate: record.scheduledDate || undefined,
+            requestNumber: record.requestNumber || "",
+            destinationDocument: record.destinationDocument || "",
             remarks: record.remarks,
           }}
           stockOutId={record.id}
           products={products}
           users={users}
         />
+      )}
+      {dialogType === "Validate" && (
+        <ValidateStockOutDialog stockOutId={record.id} record={record} />
       )}
     </Dialog>
   );

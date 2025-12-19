@@ -8,6 +8,8 @@ import {
   LogOut,
   Users,
   FolderTree,
+  ShoppingCart,
+  ClipboardCheck,
 } from "lucide-react";
 import {
   Sidebar,
@@ -42,6 +44,16 @@ const menuItems = [
     title: "Stock Out",
     url: "/stock-out",
     icon: ArrowUp,
+  },
+  {
+    title: "Purchase Requests",
+    url: "/purchase-requests",
+    icon: ShoppingCart,
+  },
+  {
+    title: "Goods Receipt",
+    url: "/goods-receipts",
+    icon: ClipboardCheck,
   },
   {
     title: "Categories",

@@ -23,6 +23,19 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useAddCategory, useUpdateCategory } from "@/hooks/use-categories";
 
+const content = {
+  create: {
+    title: "Add New Category",
+    description: "Add a new category by filling out the required details below.",
+    btnTitle: "Create Category",
+  },
+  update: {
+    title: "Update Category",
+    description: "Modify category details as needed and save your changes.",
+    btnTitle: "Save Changes",
+  },
+};
+
 const defaultValues = {
   name: "",
   description: "",
@@ -64,14 +77,9 @@ export function CategoryFormDialog(props: CategoryFormProps) {
     addMutation.mutate(data);
   };
 
-  const isPending = addMutation.isPending || updateMutation.isPending;
+  const { title, description, btnTitle } = content[action];
 
-  const title = action === "update" ? "Edit Category" : "Add New Category";
-  const description =
-    action === "update"
-      ? "Modify category details as needed and save your changes."
-      : "Add a new category by filling out the required details below.";
-  const btnTitle = action === "update" ? "Save Changes" : "Create Category";
+  const isPending = addMutation.isPending || updateMutation.isPending;
 
   return (
     <DialogContent
@@ -147,8 +155,8 @@ export function CategoryFormDialog(props: CategoryFormProps) {
 
       <DialogFooter>
         <DialogClose>Cancel</DialogClose>
-        <Button disabled={isPending} form="category-form" type="submit">
-          {isPending ? "Saving..." : btnTitle}
+        <Button disabled={isPending} form="category-form">
+          {btnTitle}
         </Button>
       </DialogFooter>
     </DialogContent>

@@ -7,7 +7,7 @@ import {
 import { toast } from "sonner";
 import { closeDialog } from "@/components/ui/dialog";
 import { stockInServices } from "@/services/stock-in-services";
-import { QueryParams, MutationResponse, PaginatedResponse } from "@/types";
+import { QueryParams, MutationResponse } from "@/types";
 import { IStockIn } from "@/types/api";
 
 // QUERY KEYS
@@ -86,6 +86,24 @@ export const useDeleteStockIn = () => {
         queryKey: [{ scope: "STOCK_SUMMARY" }],
       });
       toast.success(data.message);
+    },
+  });
+};
+
+export const useValidateStockIn = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: stockInServices.validateStockIn,
+    onSuccess: (data: MutationResponse<IStockIn>) => {
+      queryClient.invalidateQueries({
+        queryKey: stockInKeys.all,
+      });
+      queryClient.invalidateQueries({
+        queryKey: [{ scope: "STOCK_SUMMARY" }],
+      });
+      toast.success(data.message);
+      closeDialog();
     },
   });
 };

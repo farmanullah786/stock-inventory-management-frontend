@@ -1,6 +1,6 @@
 import { apiClient } from "./api-client";
 import { generateEndPoint } from "@/lib/utils";
-import { IProduct, MutationResponse, PaginatedResponse, QueryParams } from "@/types";
+import { IProduct, MutationResponse, PaginatedResponse } from "@/types";
 import { QueryFunctionContext } from "@tanstack/react-query";
 import { productKeys } from "@/hooks/use-products";
 import { ProductFormData } from "@/schemas/product-schema";

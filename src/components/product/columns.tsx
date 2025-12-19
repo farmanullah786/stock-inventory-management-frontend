@@ -24,8 +24,8 @@ import {
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
-export const createProductColumns = (
-  userRole?: string
+export const productColumns = (
+  userRole: string
 ): ColumnDef<IProduct>[] => {
   const canEdit = canManageProducts(userRole);
   const canDeleteProduct = canDelete(userRole);
@@ -196,11 +196,11 @@ const ActionsRow = ({
         <ProductFormDialog
           action="update"
           product={{
-            name: product.name || "",
-            categoryId: product.categoryId || product.category?.id || 0,
+            name: product.name,
+            categoryId: product.categoryId || product.category?.id,
             unit: product.unit || "pcs",
-            description: product.description || "",
-            openingStock: product.openingStock || 0,
+            description: product.description,
+            openingStock: product.openingStock,
             isActive: product.isActive !== undefined ? product.isActive : true,
           }}
           productId={product.id}

@@ -7,6 +7,11 @@ export const stockOutSchema = z.object({
   issuedToId: z.number().optional(),
   site: z.string().optional(),
   technicianId: z.number().optional(),
+  status: z.enum(["draft", "ready", "done", "cancelled"]).optional(),
+  location: z.string().optional(),
+  scheduledDate: z.string().optional(),
+  requestNumber: z.string().optional(),
+  destinationDocument: z.string().optional(),
   remarks: z.string().optional(),
 });
 

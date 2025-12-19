@@ -1,9 +1,10 @@
 import { Navigate } from "react-router-dom";
 import { useUser } from "@/store/use-user-store";
 import { routesConfig } from "@/config/routes-config";
+import { ReactNode } from "react";
 
 interface PublicRouteProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 export function PublicRoute({ children }: PublicRouteProps) {

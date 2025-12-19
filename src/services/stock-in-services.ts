@@ -1,6 +1,6 @@
 import { apiClient } from "./api-client";
 import { generateEndPoint } from "@/lib/utils";
-import { IStockIn, MutationResponse, PaginatedResponse, QueryParams } from "@/types";
+import { IStockIn, MutationResponse, PaginatedResponse } from "@/types";
 import { QueryFunctionContext } from "@tanstack/react-query";
 import { stockInKeys } from "@/hooks/use-stock-in";
 import { StockInFormData } from "@/schemas/stock-in-schema";
@@ -32,5 +32,8 @@ export const stockInServices = {
 
   deleteStockIn: (id: number): Promise<MutationResponse> =>
     apiClient.delete(`stock-in/${id}`),
+
+  validateStockIn: (id: number): Promise<MutationResponse<IStockIn>> =>
+    apiClient.post(`stock-in/${id}/validate`),
 };
 

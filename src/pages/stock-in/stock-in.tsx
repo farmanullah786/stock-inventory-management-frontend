@@ -5,7 +5,7 @@ import { useFetchUsers } from "@/hooks/use-user";
 import { useUser } from "@/store/use-user-store";
 import StockInFormDialog from "../../components/stock-in-form/stock-in-form";
 import { canModifyInventory } from "@/lib/utils";
-import { createStockInColumns } from "@/components/stock-in/columns";
+import { stockInColumns } from "@/components/stock-in/columns";
 import { usePaginationQuery } from "@/hooks/use-pagination-query";
 import { PageHeader } from "@/components/shared/page-header";
 import { FilterCard } from "@/components/shared/filter-card";
@@ -38,7 +38,7 @@ const StockIn = () => {
   const users = usersQuery.isSuccess ? usersQuery.data.data : [];
 
   const columns = useMemo(
-    () => createStockInColumns(products, users, user.role),
+    () => stockInColumns(products, users, user.role),
     [products, users, user.role]
   );
 

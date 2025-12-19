@@ -32,6 +32,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/ui/date-picker";
 import { useAddStockOut, useUpdateStockOut } from "@/hooks/use-stock-out";
 
+const content = {
+  create: {
+    title: "Add Stock Out",
+    description: "Record outgoing stock by filling out the details below.",
+    btnTitle: "Create Record",
+  },
+  update: {
+    title: "Update Stock Out",
+    description: "Modify stock out record details as needed.",
+    btnTitle: "Save Changes",
+  },
+};
+
 const defaultValues = {
   productId: 0,
   date: new Date().toISOString().split("T")[0],
@@ -39,6 +52,11 @@ const defaultValues = {
   issuedToId: undefined,
   site: "",
   technicianId: undefined,
+  status: "draft" as const,
+  location: "",
+  scheduledDate: undefined,
+  requestNumber: "",
+  destinationDocument: "",
   remarks: "",
 };
 
@@ -72,18 +90,13 @@ export function StockOutFormDialog(props: StockOutFormProps) {
     addMutation.mutate(data);
   };
 
-  const isPending = addMutation.isPending || updateMutation.isPending;
+  const { title, description, btnTitle } = content[action];
 
-  const title = action === "update" ? "Edit Stock Out" : "Add Stock Out";
-  const description =
-    action === "update"
-      ? "Modify stock out record details as needed."
-      : "Record outgoing stock by filling out the details below.";
-  const btnTitle = action === "update" ? "Save Changes" : "Create Record";
+  const isPending = addMutation.isPending || updateMutation.isPending;
 
   return (
     <DialogContent
-      className="max-w-md"
+      className="max-w-2xl"
       onCloseAutoFocus={() => form.reset()}
     >
       <DialogHeader>
@@ -243,6 +256,70 @@ export function StockOutFormDialog(props: StockOutFormProps) {
                 )}
               />
 
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="location"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Location/Warehouse</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Source location" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="scheduledDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Scheduled Date</FormLabel>
+                      <FormControl>
+                        <DatePicker 
+                          placeholder="Planned shipping date" 
+                          {...field}
+                          value={field.value || undefined}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="requestNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Request Number</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Request/Order number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="destinationDocument"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Destination Document</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Sales order, delivery note" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
               <FormField
                 control={form.control}
                 name="remarks"
@@ -260,16 +337,16 @@ export function StockOutFormDialog(props: StockOutFormProps) {
                   </FormItem>
                 )}
               />
-            </form>
-          </Form>
-        </DialogBody>
+          </form>
+        </Form>
+      </DialogBody>
 
-        <DialogFooter>
-          <DialogClose>Cancel</DialogClose>
-          <Button disabled={isPending} form="stock-out-form" type="submit">
-            {isPending ? "Saving..." : btnTitle}
-          </Button>
-        </DialogFooter>
+      <DialogFooter>
+        <DialogClose>Cancel</DialogClose>
+        <Button disabled={isPending} form="stock-out-form">
+          {btnTitle}
+        </Button>
+      </DialogFooter>
     </DialogContent>
   );
 };

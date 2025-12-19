@@ -4,7 +4,10 @@ import { DataTableColumnHeader } from "../shared/data-table/data-table-column-he
 import { IStockSummary } from "@/types/api";
 import { TruncatedText } from "../shared/truncated-text";
 
-export const stockSummaryColumns: ColumnDef<IStockSummary>[] = [
+export const stockSummaryColumns = (
+  userRole: string
+): ColumnDef<IStockSummary>[] => {
+  const columns: ColumnDef<IStockSummary>[] = [
   {
     accessorKey: "productId",
     header: ({ column }) => (
@@ -126,3 +129,6 @@ export const stockSummaryColumns: ColumnDef<IStockSummary>[] = [
     },
   },
 ];
+
+  return columns;
+};

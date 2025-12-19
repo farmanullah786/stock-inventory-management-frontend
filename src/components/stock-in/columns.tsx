@@ -15,21 +15,34 @@ import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { DataTableColumnHeader } from "../shared/data-table/data-table-column-header";
 import StockInFormDialog from "../stock-in-form/stock-in-form";
-import { canDelete, canModifyInventory, formatDate } from "@/lib/utils";
+import { canDelete, canModifyInventory, formatDate, isAdminOrManager } from "@/lib/utils";
+import { getStockInStatusBadge } from "@/lib/badge-helpers";
 import { DeleteStockInAlert } from "./delete-stock-in-alert";
 import { IDialogType } from "@/types";
 import { useState } from "react";
 import { TruncatedText } from "../shared/truncated-text";
 import { CreatorCell } from "../shared/creator-cell";
+import { useValidateStockIn } from "@/hooks/use-stock-in";
+import { DEFAULT_CURRENCY } from "@/constants";
+import {
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogBody,
+} from "@/components/ui/dialog";
 
-export const createStockInColumns = (
+export const stockInColumns = (
   products: IProduct[] = [],
   users: IUser[] = [],
   userRole?: string
 ): ColumnDef<IStockIn>[] => {
   const canEdit = canModifyInventory(userRole);
   const canDeleteStockIn = canDelete(userRole);
-  const showActions = canEdit || canDeleteStockIn;
+  const canValidate = isAdminOrManager(userRole);
+  const showActions = canEdit || canDeleteStockIn || canValidate;
 
   const columns: ColumnDef<IStockIn>[] = [
     {
@@ -38,6 +51,17 @@ export const createStockInColumns = (
         <DataTableColumnHeader column={column} title="ID" className="min-w-5" />
       ),
       maxSize: 40,
+    },
+    {
+      accessorKey: "referenceNumber",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Reference" />
+      ),
+      cell: ({ row }) => (
+        <Badge variant="outline">
+          {row.original.referenceNumber || "-"}
+        </Badge>
+      ),
     },
     {
       accessorKey: "product.name",
@@ -87,7 +111,7 @@ export const createStockInColumns = (
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Currency" />
       ),
-      cell: ({ row }) => row.original.currency || "AFN",
+      cell: ({ row }) => row.original.currency || DEFAULT_CURRENCY,
     },
     {
       accessorKey: "poNumber",
@@ -95,6 +119,28 @@ export const createStockInColumns = (
         <DataTableColumnHeader column={column} title="PO Number" />
       ),
       cell: ({ row }) => row.original.poNumber || "-",
+    },
+    {
+      accessorKey: "purchaseRequest.prNumber",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="PR Number" />
+      ),
+      cell: ({ row }) => {
+        const pr = row.original.purchaseRequest;
+        if (!pr) return "-";
+        return (
+          <Badge variant="outline" className="cursor-pointer hover:bg-primary/10">
+            {pr.prNumber}
+          </Badge>
+        );
+      },
+    },
+    {
+      accessorKey: "status",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Status" />
+      ),
+      cell: ({ row }) => getStockInStatusBadge(row.original.status || "validated"),
     },
     {
       accessorKey: "invoiceNo",
@@ -204,6 +250,7 @@ export const createStockInColumns = (
           users={users}
           canEdit={canEdit}
           canDelete={canDeleteStockIn}
+          canValidate={canValidate}
         />
       ),
       maxSize: 30,
@@ -213,25 +260,80 @@ export const createStockInColumns = (
   return columns;
 };
 
+
+const ValidateStockInDialog = ({
+  stockInId,
+  record,
+}: {
+  stockInId: number;
+  record: IStockIn;
+}) => {
+  const validateMutation = useValidateStockIn();
+
+  const handleValidate = () => {
+    validateMutation.mutate(stockInId);
+  };
+
+  return (
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>Validate Stock In</DialogTitle>
+        <DialogDescription>
+          Validate this stock in record. Stock will be added to inventory upon validation.
+        </DialogDescription>
+      </DialogHeader>
+      <DialogBody>
+        <div className="space-y-2">
+          <p className="text-sm text-muted-foreground">
+            <strong>Product:</strong> {record.product?.name}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            <strong>Quantity:</strong> {record.quantity} {record.product?.unit}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Are you sure you want to validate this stock in record? This action will add the stock to inventory.
+          </p>
+        </div>
+      </DialogBody>
+      <DialogFooter>
+        <DialogClose asChild>
+          <Button variant="outline">Cancel</Button>
+        </DialogClose>
+        <Button onClick={handleValidate} disabled={validateMutation.isPending}>
+          {validateMutation.isPending ? "Validating..." : "Validate"}
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  );
+};
+
 const ActionsRow = ({
   record,
   products,
   users,
   canEdit,
   canDelete: canDeleteStockIn,
+  canValidate,
 }: {
   record: IStockIn;
   products: IProduct[];
   users: IUser[];
   canEdit: boolean;
   canDelete: boolean;
+  canValidate: boolean;
 }) => {
   const [dialogType, setDialogType] = useState<IDialogType>("None");
 
   const handleDialogType = (type: IDialogType) => setDialogType(type);
 
-  const hasAnyAction = canEdit || canDeleteStockIn;
+  const hasAnyAction = canEdit || canDeleteStockIn || canValidate;
   if (!hasAnyAction) return null;
+
+  // Odoo-style: Only allow edit/delete for draft or validated status
+  // Done and cancelled records should not be editable
+  const canUpdate = (record.status === "draft" || record.status === "validated") && canEdit;
+  const canDeleteRecord = (record.status === "draft" || record.status === "validated" || record.status === "cancelled") && canDeleteStockIn;
+  const canValidateRecord = record.status === "draft" && canValidate;
 
   return (
     <Dialog>
@@ -243,28 +345,37 @@ const ActionsRow = ({
               <MoreHorizontal className="size-5" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-32">
+          <DropdownMenuContent align="end" className="w-40">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {canEdit && (
+            {canUpdate && (
               <DialogTrigger asChild>
                 <DropdownMenuItem onClick={() => handleDialogType("Update")}>
                   Edit
                 </DropdownMenuItem>
               </DialogTrigger>
             )}
-            {/* {canEdit && canDeleteStockIn && <DropdownMenuSeparator />} */}
-            {canDeleteStockIn && (
-              <AlertDialogTrigger asChild>
-                <DropdownMenuItem onClick={() => handleDialogType("Delete")}>
-                  Delete
+            {canValidateRecord && (
+              <DialogTrigger asChild>
+                <DropdownMenuItem onClick={() => handleDialogType("Validate")}>
+                  Validate
                 </DropdownMenuItem>
-              </AlertDialogTrigger>
+              </DialogTrigger>
+            )}
+            {canDeleteRecord && (
+              <>
+                {canUpdate && <DropdownMenuSeparator />}
+                <AlertDialogTrigger asChild>
+                  <DropdownMenuItem onClick={() => handleDialogType("Delete")}>
+                    Delete
+                  </DropdownMenuItem>
+                </AlertDialogTrigger>
+              </>
             )}
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {dialogType === "Delete" && canDeleteStockIn && (
+        {dialogType === "Delete" && canDeleteRecord && (
           <DeleteStockInAlert stockInId={record.id} />
         )}
       </AlertDialog>
@@ -282,15 +393,22 @@ const ActionsRow = ({
             invoiceNo: record.invoiceNo,
             vendorName: record.vendorName,
             grnNo: record.grnNo,
-            year: record.year,
-            month: record.month,
             stockKeeperId: record.stockKeeperId,
+            location: record.location || "",
+            scheduledDate: record.scheduledDate || undefined,
+            status: record.status || "validated",
             remarks: record.remarks,
           }}
           stockInId={record.id}
           products={products}
           users={users}
+          recordStatus={record.status}
+          referenceNumber={record.referenceNumber}
+          purchaseRequestId={record.purchaseRequestId}
         />
+      )}
+      {dialogType === "Validate" && (
+        <ValidateStockInDialog stockInId={record.id} record={record} />
       )}
     </Dialog>
   );

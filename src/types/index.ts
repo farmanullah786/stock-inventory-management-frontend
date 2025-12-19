@@ -10,6 +10,12 @@ export type IDialogType =
   | "Delete"
   | "Change Password"
   | "Change Profile"
+  | "Submit"
+  | "Approve"
+  | "Reject"
+  | "CreateGR"
+  | "Verify"
+  | "Validate"
   | "None";
 
 export type BaseEntity = {

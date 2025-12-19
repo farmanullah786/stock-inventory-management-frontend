@@ -31,6 +31,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAddProduct, useUpdateProduct } from "@/hooks/use-products";
 import { useFetchCategories } from "@/hooks/use-categories";
 
+const content = {
+  create: {
+    title: "Add New Product",
+    description: "Add a new product by filling out the required details below.",
+    btnTitle: "Create Product",
+  },
+  update: {
+    title: "Update Product",
+    description: "Modify product details as needed and save your changes.",
+    btnTitle: "Save Changes",
+  },
+};
+
 const defaultValues = {
   name: "",
   categoryId: 0,
@@ -71,14 +84,9 @@ export function ProductFormDialog(props: ProductFormProps) {
     addMutation.mutate(data);
   };
 
-  const isPending = addMutation.isPending || updateMutation.isPending;
+  const { title, description, btnTitle } = content[action];
 
-  const title = action === "update" ? "Edit Product" : "Add New Product";
-  const description =
-    action === "update"
-      ? "Modify product details as needed and save your changes."
-      : "Add a new product by filling out the required details below.";
-  const btnTitle = action === "update" ? "Save Changes" : "Create Product";
+  const isPending = addMutation.isPending || updateMutation.isPending;
 
   return (
     <DialogContent
@@ -90,13 +98,13 @@ export function ProductFormDialog(props: ProductFormProps) {
         <DialogDescription>{description}</DialogDescription>
       </DialogHeader>
 
-        <DialogBody>
-          <Form {...form}>
-            <form
-              id="product-form"
-              onSubmit={form.handleSubmit(onSubmit)}
-              className="space-y-4"
-            >
+      <DialogBody>
+        <Form {...form}>
+          <form
+            id="product-form"
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-4"
+          >
               <FormField
                 control={form.control}
                 name="name"
@@ -217,16 +225,16 @@ export function ProductFormDialog(props: ProductFormProps) {
                   </FormItem>
                 )}
               />
-            </form>
-          </Form>
-        </DialogBody>
+          </form>
+        </Form>
+      </DialogBody>
 
-        <DialogFooter>
-          <DialogClose>Cancel</DialogClose>
-          <Button disabled={isPending} form="product-form" type="submit">
-            {isPending ? "Saving..." : btnTitle}
-          </Button>
-        </DialogFooter>
+      <DialogFooter>
+        <DialogClose>Cancel</DialogClose>
+        <Button disabled={isPending} form="product-form">
+          {btnTitle}
+        </Button>
+      </DialogFooter>
     </DialogContent>
   );
 }

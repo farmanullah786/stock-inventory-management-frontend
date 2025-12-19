@@ -1,8 +1,8 @@
+import { ColumnDef } from "@tanstack/react-table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { ColumnDef } from "@tanstack/react-table";
+import { Badge } from "@/components/ui/badge";
 import { MoreHorizontal } from "lucide-react";
-import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,19 +11,25 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useState } from "react";
-import { IUser } from "@/types/api";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
-import { IDialogType } from "@/types";
+import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { DataTableColumnHeader } from "../shared/data-table/data-table-column-header";
-import { capitalizeWords, formatDate, getInitials } from "@/lib/utils";
+import { IUser } from "@/types/api";
+import { IDialogType } from "@/types";
+import { useState } from "react";
+import { capitalizeWords, formatDate, getInitials, getRoleBadgeColor, getStatusBadgeColor, canManageUsers, canDelete } from "@/lib/utils";
 import { UserForm } from "./user-form-dialog";
-import { Badge } from "../ui/badge";
-import { getRoleBadgeColor, getStatusBadgeColor } from "@/lib/utils";
 import { useDeleteUser } from "@/hooks/use-user";
 import { DeleteDialog } from "../shared/delete-dialog";
 
-export const columns: ColumnDef<IUser>[] = [
+export const userColumns = (
+  userRole: string
+): ColumnDef<IUser>[] => {
+  const canEdit = canManageUsers(userRole);
+  const canDeleteUser = canDelete(userRole);
+  const showActions = canEdit || canDeleteUser;
+
+  const columns: ColumnDef<IUser>[] = [
   {
     accessorKey: "firstName",
     header: ({ column }) => (
@@ -88,21 +94,42 @@ export const columns: ColumnDef<IUser>[] = [
     ),
     cell: ({ row }) => formatDate(row.original.createdAt),
   },
-  {
-    id: "actions",
-    header: ({ column }) => (
-      <DataTableColumnHeader
-        column={column}
-        title=""
-        className="min-w-[.5rem]"
-      />
-    ),
-    cell: ({ row }) => <ActionsRow user={row.original} />,
-    maxSize: 30,
-  },
-];
+  ];
 
-const ActionsRow = ({ user }: { user: IUser }) => {
+  // Only add actions column if user has permissions
+  if (showActions) {
+    columns.push({
+      id: "actions",
+      header: ({ column }) => (
+        <DataTableColumnHeader
+          column={column}
+          title=""
+          className="min-w-[3rem]"
+        />
+      ),
+      cell: ({ row }) => (
+        <ActionsRow
+          user={row.original}
+          canEdit={canEdit}
+          canDelete={canDeleteUser}
+        />
+      ),
+      maxSize: 30,
+    });
+  }
+
+  return columns;
+};
+
+const ActionsRow = ({
+  user,
+  canEdit,
+  canDelete: canDeleteUser,
+}: {
+  user: IUser;
+  canEdit: boolean;
+  canDelete: boolean;
+}) => {
   const [dialogType, setDialogType] = useState<IDialogType>("None");
   const deleteUserMutation = useDeleteUser();
 
@@ -111,6 +138,9 @@ const ActionsRow = ({ user }: { user: IUser }) => {
   const handleDelete = () => {
     deleteUserMutation.mutate(user.id);
   };
+
+  const hasAnyAction = canEdit || canDeleteUser;
+  if (!hasAnyAction) return null;
 
   return (
     <Dialog>
@@ -122,23 +152,28 @@ const ActionsRow = ({ user }: { user: IUser }) => {
               <MoreHorizontal className="size-5" />
             </Button>
           </DropdownMenuTrigger>
+
           <DropdownMenuContent align="end" className="w-32">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DialogTrigger asChild>
-              <DropdownMenuItem onClick={() => handleDialogType("Update")}>
-                Edit
-              </DropdownMenuItem>
-            </DialogTrigger>
-            <AlertDialogTrigger asChild>
-              <DropdownMenuItem onClick={() => handleDialogType("Delete")}>
-                Delete
-              </DropdownMenuItem>
-            </AlertDialogTrigger>
+            {canEdit && (
+              <DialogTrigger asChild>
+                <DropdownMenuItem onClick={() => handleDialogType("Update")}>
+                  Edit
+                </DropdownMenuItem>
+              </DialogTrigger>
+            )}
+            {canDeleteUser && (
+              <AlertDialogTrigger asChild>
+                <DropdownMenuItem onClick={() => handleDialogType("Delete")}>
+                  Delete
+                </DropdownMenuItem>
+              </AlertDialogTrigger>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {dialogType === "Delete" && (
+        {dialogType === "Delete" && canDeleteUser && (
           <DeleteDialog
             title="Delete User"
             description={`This action cannot be undone. This will permanently delete the user account for ${user.firstName} ${user.lastName}.`}

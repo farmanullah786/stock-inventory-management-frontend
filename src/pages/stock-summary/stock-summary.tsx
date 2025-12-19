@@ -23,9 +23,11 @@ import { FilterCard } from "@/components/shared/filter-card";
 import { SearchInput } from "@/components/shared/search-input";
 import { CategoryFilter } from "@/components/shared/category-filter";
 import { DateRangeFilter } from "@/components/shared/date-range-filter";
+import { useUser } from "@/store/use-user-store";
 
 const StockSummary = () => {
   const { searchParams, setSearchParams, queryOptions } = usePaginationQuery();
+  const { user } = useUser();
 
   const {
     data: stockSummaryData,
@@ -66,6 +68,11 @@ const StockSummary = () => {
     await exportToExcel("Stock_Summary", summary, totals);
   };
 
+  const columns = useMemo(
+    () => stockSummaryColumns(user.role || ""),
+    [user.role]
+  );
+
   if (isError) {
     return (
       <>
@@ -94,10 +101,10 @@ const StockSummary = () => {
         <div className="space-y-4">
           <StockSummary.Filters />
           {isPending ? (
-            <TableSkeleton columnCount={stockSummaryColumns.length} rowCount={10} />
+            <TableSkeleton columnCount={columns.length || 8} rowCount={10} />
           ) : isSuccess ? (
             <ServerDataTable
-              columns={stockSummaryColumns}
+              columns={columns}
               data={summary}
               searchParams={searchParams}
               setSearchParams={setSearchParams}
