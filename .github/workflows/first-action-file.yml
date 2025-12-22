@@ -1,0 +1,12 @@
+name: "First Frontend Action File Workflow"
+on: workflow_dispatch
+jobs:
+  first_frontend_job_action:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout Repository"
+        run: echo "Checking out the repository..."
+      - name: "Run Frontend Script"
+        run: echo "Running frontend script..."
+      - name: "Complete Action"
+        run: echo "First frontend action file workflow completed."
