@@ -55,7 +55,7 @@ export const stockOutColumns = (
     {
       accessorKey: "referenceNumber",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Reference" />
+        <DataTableColumnHeader column={column} title="Reference" className="min-w-[8rem]"/>
       ),
       cell: ({ row }) => (
         <Badge variant="outline">

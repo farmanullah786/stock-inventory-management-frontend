@@ -15,12 +15,19 @@ import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { DataTableColumnHeader } from "../shared/data-table/data-table-column-header";
 import GoodsReceiptFormDialog from "../goods-receipt-form/goods-receipt-form";
-import { canDelete, canModifyInventory, formatDate, isAdminOrManager } from "@/lib/utils";
-import { getGoodsReceiptStatusBadge, getConditionBadge } from "@/lib/badge-helpers";
+import {
+  canDelete,
+  canModifyInventory,
+  formatDate,
+  isAdminOrManager,
+} from "@/lib/utils";
+import {
+  getGoodsReceiptStatusBadge,
+  getConditionBadge,
+} from "@/lib/badge-helpers";
 import { DeleteGoodsReceiptAlert } from "./delete-goods-receipt-alert";
 import { IDialogType } from "@/types";
 import { useState } from "react";
-
 
 export const goodsReceiptColumns = (
   products: IProduct[] = [],
@@ -43,7 +50,11 @@ export const goodsReceiptColumns = (
     {
       accessorKey: "grnNumber",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="GRN Number" className="min-w-[8rem]" />
+        <DataTableColumnHeader
+          column={column}
+          title="GRN Number"
+          className="min-w-[8rem]"
+        />
       ),
       cell: ({ row }) => row.original.grnNumber,
     },
@@ -55,17 +66,22 @@ export const goodsReceiptColumns = (
       cell: ({ row }) => {
         const pr = row.original.purchaseRequest;
         if (!pr) return "-";
-        return (
-          <div className="flex items-center gap-2">
-            <span>{pr.prNumber}</span>
-            {pr.items && pr.items.some((item) => (item.quantityReceived || 0) > 0) && (
-              <Badge variant="outline" className="text-xs">
-                Partial
-              </Badge>
-            )}
-          </div>
-        );
+        return pr.prNumber;
       },
+      // cell: ({ row }) => {
+      //   const pr = row.original.purchaseRequest;
+      //   if (!pr) return "-";
+      //   return (
+      //     <div className="flex items-center gap-2">
+      //       <span>{pr.prNumber}</span>
+      //       {pr.items && pr.items.some((item) => (item.quantityReceived || 0) > 0) && (
+      //         <Badge variant="outline" className="text-xs">
+      //           Partial
+      //         </Badge>
+      //       )}
+      //     </div>
+      //   );
+      // },
     },
     {
       accessorKey: "status",
@@ -160,9 +176,13 @@ const ActionsRow = ({
   const hasAnyAction = canEdit || canDeleteGR || canVerify;
   if (!hasAnyAction) return null;
 
-  const canUpdate = (record.status === "pending" || record.status === "partial") && canEdit;
-  const canVerifyGR = record.status !== "rejected" && !record.verifiedBy && canVerify;
-  const canDeleteRecord = (record.status === "pending" || record.status === "rejected") && canDeleteGR;
+  const canUpdate =
+    (record.status === "pending" || record.status === "partial") && canEdit;
+  const canVerifyGR =
+    record.status !== "rejected" && !record.verifiedBy && canVerify;
+  const canDeleteRecord =
+    (record.status === "pending" || record.status === "rejected") &&
+    canDeleteGR;
 
   return (
     <Dialog>
@@ -226,4 +246,3 @@ const ActionsRow = ({
     </Dialog>
   );
 };
-

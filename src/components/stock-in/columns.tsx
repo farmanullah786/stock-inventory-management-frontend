@@ -55,7 +55,7 @@ export const stockInColumns = (
     {
       accessorKey: "referenceNumber",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Reference" />
+        <DataTableColumnHeader column={column} title="Reference" className="min-w-[8rem]"/>
       ),
       cell: ({ row }) => (
         <Badge variant="outline">
@@ -116,14 +116,14 @@ export const stockInColumns = (
     {
       accessorKey: "poNumber",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="PO Number" />
+        <DataTableColumnHeader column={column} title="PO Number" className="min-w-[8rem]"/>
       ),
       cell: ({ row }) => row.original.poNumber || "-",
     },
     {
       accessorKey: "purchaseRequest.prNumber",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="PR Number" />
+        <DataTableColumnHeader column={column} title="PR Number" className="min-w-[8rem]"/>
       ),
       cell: ({ row }) => {
         const pr = row.original.purchaseRequest;
@@ -163,7 +163,7 @@ export const stockInColumns = (
     {
       accessorKey: "grnNo",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="GRN N/O" />
+        <DataTableColumnHeader column={column} title="GRN N/O" className="min-w-[8rem]"/>
       ),
       cell: ({ row }) => row.original.grnNo || "-",
     },
