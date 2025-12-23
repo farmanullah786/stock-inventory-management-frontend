@@ -60,7 +60,7 @@ const content = {
   },
   approve: {
     title: "Approve Purchase Request",
-    description: "Approve this purchase request.",
+    description: "Approve this purchase request for processing.",
     btnTitle: "Approve",
   },
   reject: {
