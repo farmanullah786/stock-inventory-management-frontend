@@ -112,15 +112,15 @@ const router = createBrowserRouter([
         element: <Navigate to={routesConfig.auth.login} replace />,
       },
       {
-        path: getPathSegment(routesConfig.auth.login),
+        path: getPathSegment(routesConfig.auth.login, routesConfig.auth.base),
         element: <Login />,
       },
       {
-        path: getPathSegment(routesConfig.auth.requestPasswordReset),
+        path: getPathSegment(routesConfig.auth.requestPasswordReset, routesConfig.auth.base),
         element: <ForgotPassword />,
       },
       {
-        path: getPathSegment(routesConfig.auth.resetPassword),
+        path: getPathSegment(routesConfig.auth.resetPassword, routesConfig.auth.base),
         element: <ResetPassword />,
       },
     ],

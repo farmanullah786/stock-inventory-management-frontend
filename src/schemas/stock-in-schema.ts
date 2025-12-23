@@ -7,10 +7,10 @@ export const stockInSchema = z.object({
   unitPrice: z.coerce.number().min(0, { message: "Unit price must be 0 or greater." }).optional(),
   totalPrice: z.coerce.number().min(0, { message: "Total price must be 0 or greater." }).optional(),
   currency: z.string().optional(),
-  poNumber: z.string().optional(),
-  invoiceNo: z.string().optional(),
-  vendorName: z.string().optional(),
-  grnNo: z.string().optional(),
+  poNumber: z.string().nullable().transform((val) => val ?? "").optional(),
+  invoiceNo: z.string().nullable().transform((val) => val ?? "").optional(),
+  vendorName: z.string().nullable().transform((val) => val ?? "").optional(),
+  grnNo: z.string().nullable().transform((val) => val ?? "").optional(),
   year: z.number().int().min(2000).max(2100).optional(), // Auto-calculated from date, not shown in form
   month: z.number().int().min(1).max(12).optional(), // Auto-calculated from date, not shown in form
   stockKeeperId: z.number().optional(),

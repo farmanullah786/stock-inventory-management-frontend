@@ -19,10 +19,25 @@ export function cn(...inputs: ClassValue[]) {
 
 /**
  * Extracts the path segment from a full route path
- * Example: "/stock-in" -> "stock-in", "/auth/login" -> "login"
+ * For nested routes, extracts the relative segment after the base path
+ * Example: "/stock-in" -> "stock-in", "/auth/login" -> "auth/login" (when used as base)
+ * For child routes: "/auth/login" with base "/auth" -> "login"
  */
-export const getPathSegment = (fullPath: string): string => {
-  return fullPath.replace(/^\//, "");
+export const getPathSegment = (fullPath: string, basePath?: string): string => {
+  const pathWithoutLeadingSlash = fullPath.replace(/^\//, "");
+  
+  // If basePath is provided and the fullPath starts with it, extract relative segment
+  if (basePath) {
+    const baseWithoutSlash = basePath.replace(/^\//, "");
+    if (pathWithoutLeadingSlash.startsWith(baseWithoutSlash + "/")) {
+      return pathWithoutLeadingSlash.substring(baseWithoutSlash.length + 1);
+    }
+    if (pathWithoutLeadingSlash === baseWithoutSlash) {
+      return ""; // Empty for index routes
+    }
+  }
+  
+  return pathWithoutLeadingSlash;
 };
 
 export const generateEndPoint = (

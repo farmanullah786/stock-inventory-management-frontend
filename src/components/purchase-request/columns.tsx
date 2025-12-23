@@ -119,8 +119,21 @@ export const purchaseRequestColumns = (
         const items = row.original.items || [];
         if (items.length === 0) return "-";
         
-        const totalOrdered = items.reduce((sum, item) => sum + (item.quantity || 0), 0);
-        const totalReceived = items.reduce((sum, item) => sum + (item.quantityReceived || 0), 0);
+        // Convert to numbers and handle null/undefined/string values
+        const totalOrdered = items.reduce((sum, item) => {
+          const quantity = Number(item.quantity) || 0;
+          return sum + quantity;
+        }, 0);
+        
+        const totalReceived = items.reduce((sum, item) => {
+          const quantityReceived = Number(item.quantityReceived) || 0;
+          return sum + quantityReceived;
+        }, 0);
+        
+        // Handle edge cases
+        if (totalOrdered === 0 || isNaN(totalOrdered) || isNaN(totalReceived)) {
+          return <Badge variant="outline">Not Received</Badge>;
+        }
         
         if (totalReceived === 0) {
           return <Badge variant="outline">Not Received</Badge>;
@@ -128,6 +141,10 @@ export const purchaseRequestColumns = (
           return <Badge variant="default">Fully Received</Badge>;
         } else {
           const percentage = Math.round((totalReceived / totalOrdered) * 100);
+          // Ensure percentage is a valid number
+          if (isNaN(percentage) || !isFinite(percentage)) {
+            return <Badge variant="outline">Not Received</Badge>;
+          }
           return <Badge variant="secondary">{percentage}% Received</Badge>;
         }
       },
