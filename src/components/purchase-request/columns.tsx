@@ -10,50 +10,46 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { IPurchaseRequest, IProduct, IUser } from "@/types/api";
+import { IPurchaseRequest, IUser } from "@/types/api";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { DataTableColumnHeader } from "../shared/data-table/data-table-column-header";
-import PurchaseRequestFormDialog from "../purchase-request-form/purchase-request-form";
-import { canDelete, canModifyInventory, formatDate, isAdminOrManager } from "@/lib/utils";
-import { getPurchaseRequestStatusBadge, getPriorityBadge } from "@/lib/badge-helpers";
+import { PurchaseRequestActions } from "./purchase-request-actions";
+import { canModifyInventory, formatDate, isAdminOrManager } from "@/lib/utils";
+import {
+  getPurchaseRequestStatusBadge,
+  getPriorityBadge,
+} from "@/lib/badge-helpers";
 import { DeletePurchaseRequestAlert } from "./delete-purchase-request-alert";
 import { IDialogType } from "@/types";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { routesConfig } from "@/config/routes-config";
 import { TruncatedText } from "../shared/truncated-text";
 import { CreatorCell } from "../shared/creator-cell";
 import { DEFAULT_CURRENCY } from "@/constants";
-import {
-  useSubmitPurchaseRequest,
-  useApprovePurchaseRequest,
-  useRejectPurchaseRequest,
-} from "@/hooks/use-purchase-request";
-import GoodsReceiptFormDialog from "../goods-receipt-form/goods-receipt-form";
-import { toast } from "sonner";
-
 
 export const purchaseRequestColumns = (
-  products: IProduct[] = [],
   users: IUser[] = [],
-  userRole: string
+  currentUser: IUser | null
 ): ColumnDef<IPurchaseRequest>[] => {
-  const canEdit = canModifyInventory(userRole);
-  const canDeletePR = canDelete(userRole);
-  const canApprove = isAdminOrManager(userRole);
-  const showActions = canEdit || canDeletePR || canApprove;
+  const canEdit = currentUser ? canModifyInventory(currentUser.role) : false;
+  const canApprove = currentUser ? isAdminOrManager(currentUser.role) : false;
+  // Show "Requested By" column only for Admins and Managers (who see all requests)
+  // Hide for Stock Keepers (who only see their own requests)
+  const showRequesterColumn = currentUser
+    ? isAdminOrManager(currentUser.role)
+    : false;
 
   const columns: ColumnDef<IPurchaseRequest>[] = [
     {
-      accessorKey: "id",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="ID" className="min-w-5" />
-      ),
-      maxSize: 40,
-    },
-    {
       accessorKey: "prNumber",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="PR Number" className="min-w-[8rem]" />
+        <DataTableColumnHeader
+          column={column}
+          title="PR Number"
+          className="min-w-[8rem]"
+        />
       ),
       cell: ({ row }) => row.original.prNumber,
     },
@@ -72,24 +68,17 @@ export const purchaseRequestColumns = (
       cell: ({ row }) => getPriorityBadge(row.original.priority),
     },
     {
-      accessorKey: "totalEstimatedCost",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Total Cost" />
-      ),
-      cell: ({ row }) => {
-        const cost = Number(row.original.totalEstimatedCost) || 0;
-        const currency = row.original.currency || DEFAULT_CURRENCY;
-        return `${cost.toFixed(2)} ${currency}`;
-      },
-    },
-    {
       accessorKey: "requestedDate",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Requested Date" />
       ),
       cell: ({ row }) => formatDate(row.original.requestedDate),
     },
-    {
+  ];
+
+  // Conditionally add "Requested By" column only for Admins and Managers
+  if (showRequesterColumn) {
+    columns.push({
       accessorKey: "requester",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Requested By" />
@@ -99,7 +88,11 @@ export const purchaseRequestColumns = (
         if (!requester) return "-";
         return `${requester.firstName} ${requester.lastName || ""}`.trim();
       },
-    },
+    });
+  }
+
+  // Add remaining columns
+  columns.push(
     {
       accessorKey: "items",
       header: ({ column }) => (
@@ -111,6 +104,17 @@ export const purchaseRequestColumns = (
       },
     },
     {
+      accessorKey: "totalEstimatedCost",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Total Cost" />
+      ),
+      cell: ({ row }) => {
+        const cost = Number(row.original.totalEstimatedCost) || 0;
+        const currency = row.original.currency || DEFAULT_CURRENCY;
+        return `${cost.toFixed(2)} ${currency}`;
+      },
+    },
+    {
       accessorKey: "received",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Received Status" />
@@ -118,23 +122,23 @@ export const purchaseRequestColumns = (
       cell: ({ row }) => {
         const items = row.original.items || [];
         if (items.length === 0) return "-";
-        
+
         // Convert to numbers and handle null/undefined/string values
         const totalOrdered = items.reduce((sum, item) => {
           const quantity = Number(item.quantity) || 0;
           return sum + quantity;
         }, 0);
-        
+
         const totalReceived = items.reduce((sum, item) => {
           const quantityReceived = Number(item.quantityReceived) || 0;
           return sum + quantityReceived;
         }, 0);
-        
+
         // Handle edge cases
         if (totalOrdered === 0 || isNaN(totalOrdered) || isNaN(totalReceived)) {
           return <Badge variant="outline">Not Received</Badge>;
         }
-        
+
         if (totalReceived === 0) {
           return <Badge variant="outline">Not Received</Badge>;
         } else if (totalReceived >= totalOrdered) {
@@ -148,62 +152,82 @@ export const purchaseRequestColumns = (
           return <Badge variant="secondary">{percentage}% Received</Badge>;
         }
       },
-    },
-  ];
+    }
+  );
 
-  if (showActions) {
-    columns.push({
-      id: "actions",
-      header: ({ column }) => (
-        <DataTableColumnHeader
-          column={column}
-          title=""
-          className="min-w-[3rem]"
-        />
-      ),
-      cell: ({ row }) => (
-        <ActionsRow
-          record={row.original}
-          products={products}
-          users={users}
-          canEdit={canEdit}
-          canDelete={canDeletePR}
-          canApprove={canApprove}
-        />
-      ),
-      maxSize: 30,
-    });
-  }
+  // Always add actions column so users can view details
+  columns.push({
+    id: "actions",
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title=""
+        className="min-w-[3rem]"
+      />
+    ),
+    cell: ({ row }) => (
+      <ActionsRow
+        record={row.original}
+        users={users}
+        canEdit={canEdit}
+        canApprove={canApprove}
+        currentUser={currentUser}
+      />
+    ),
+    maxSize: 30,
+  });
 
   return columns;
 };
 
 const ActionsRow = ({
   record,
-  products,
   users,
   canEdit,
-  canDelete: canDeletePR,
   canApprove,
+  currentUser,
 }: {
   record: IPurchaseRequest;
-  products: IProduct[];
   users: IUser[];
   canEdit: boolean;
-  canDelete: boolean;
   canApprove: boolean;
+  currentUser: IUser | null;
 }) => {
   const [dialogType, setDialogType] = useState<IDialogType>("None");
+  const navigate = useNavigate();
 
   const handleDialogType = (type: IDialogType) => setDialogType(type);
 
-  const hasAnyAction = canEdit || canDeletePR || canApprove;
-  if (!hasAnyAction) return null;
+  const handleEdit = () => {
+    navigate(
+      `${routesConfig.app.editPurchaseRequest.replace(
+        ":id",
+        record.id.toString()
+      )}`
+    );
+  };
 
-  const canSubmit = record.status === "draft" && canEdit;
+  // Only the creator can edit their own draft purchase request
+  const canUpdate =
+    record.status === "draft" &&
+    currentUser &&
+    record.requestedBy === currentUser.id &&
+    canEdit;
+  // Only the creator can submit their own draft purchase request
+  const canSubmit =
+    record.status === "draft" &&
+    currentUser &&
+    record.requestedBy === currentUser.id &&
+    canEdit;
   const canApproveReject = record.status === "pending" && canApprove;
-  const canCreateGR = record.status === "approved" && canEdit;
+  // Only the creator can delete their own draft purchase request
+  const canDeleteRecord =
+    record.status === "draft" &&
+    currentUser &&
+    record.requestedBy === currentUser.id;
 
+  // Always show actions menu since "View Details" should always be available
+  // Other actions are conditionally shown inside the menu
   return (
     <Dialog>
       <AlertDialog>
@@ -217,12 +241,20 @@ const ActionsRow = ({
           <DropdownMenuContent align="end" className="w-40">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {canEdit && (record.status === "draft" || record.status === "pending") && (
-              <DialogTrigger asChild>
-                <DropdownMenuItem onClick={() => handleDialogType("Update")}>
-                  Edit
-                </DropdownMenuItem>
-              </DialogTrigger>
+            <DropdownMenuItem
+              onClick={() =>
+                navigate(
+                  `${routesConfig.app.purchaseRequestDetail.replace(
+                    ":id",
+                    record.id.toString()
+                  )}`
+                )
+              }
+            >
+              View Details
+            </DropdownMenuItem>
+            {canUpdate && (
+              <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
             )}
             {canSubmit && (
               <DialogTrigger asChild>
@@ -245,18 +277,14 @@ const ActionsRow = ({
                 </DialogTrigger>
               </>
             )}
-            {canCreateGR && (
-              <DialogTrigger asChild>
-                <DropdownMenuItem onClick={() => handleDialogType("CreateGR")}>
-                  Create Goods Receipt
-                </DropdownMenuItem>
-              </DialogTrigger>
-            )}
-            {canDeletePR && (record.status === "draft" || record.status === "rejected") && (
+            {canDeleteRecord && (
               <>
                 <DropdownMenuSeparator />
                 <AlertDialogTrigger asChild>
-                  <DropdownMenuItem onClick={() => handleDialogType("Delete")}>
+                  <DropdownMenuItem
+                    className="text-primary"
+                    onClick={() => handleDialogType("Delete")}
+                  >
                     Delete
                   </DropdownMenuItem>
                 </AlertDialogTrigger>
@@ -264,35 +292,19 @@ const ActionsRow = ({
             )}
           </DropdownMenuContent>
         </DropdownMenu>
-        {dialogType === "Delete" && canDeletePR && (
+        {dialogType === "Delete" && canDeleteRecord && (
           <DeletePurchaseRequestAlert purchaseRequestId={record.id} />
         )}
       </AlertDialog>
-      {dialogType === "Update" && (
-        <PurchaseRequestFormDialog
-          action="update"
-          purchaseRequest={record}
-          products={products}
-          users={users}
-        />
+      {dialogType === "Submit" && (
+        <PurchaseRequestActions action="submit" purchaseRequest={record} />
       )}
-      {(dialogType === "Submit" || dialogType === "Approve" || dialogType === "Reject") && (
-        <PurchaseRequestFormDialog
-          action={dialogType.toLowerCase() as any}
-          purchaseRequest={record}
-          products={products}
-          users={users}
-        />
+      {dialogType === "Approve" && (
+        <PurchaseRequestActions action="approve" purchaseRequest={record} />
       )}
-      {dialogType === "CreateGR" && (
-        <GoodsReceiptFormDialog
-          action="create"
-          products={products}
-          users={users}
-          purchaseRequest={record}
-        />
+      {dialogType === "Reject" && (
+        <PurchaseRequestActions action="reject" purchaseRequest={record} />
       )}
     </Dialog>
   );
 };
-

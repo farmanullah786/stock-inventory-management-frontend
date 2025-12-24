@@ -13,9 +13,10 @@ import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 interface PageHeaderProps {
   title: string;
   actionButton?: {
-    label: string;
-    dialog: ReactNode;
-  };
+    label?: string;
+    dialog?: ReactNode;
+    onClick?: () => void;
+  } | ReactNode;
 }
 
 export const PageHeader = ({ title, actionButton }: PageHeaderProps) => {
@@ -30,6 +31,13 @@ export const PageHeader = ({ title, actionButton }: PageHeaderProps) => {
           </BreadcrumbList>
         </Breadcrumb>
         {actionButton && (
+          typeof actionButton === "object" && "label" in actionButton ? (
+            actionButton.onClick ? (
+              <Button onClick={actionButton.onClick}>
+                <Plus className="mr-2 h-4 w-4" />
+                {actionButton.label}
+              </Button>
+            ) : (
           <Dialog>
             <DialogTrigger asChild>
               <Button>
@@ -39,6 +47,10 @@ export const PageHeader = ({ title, actionButton }: PageHeaderProps) => {
             </DialogTrigger>
             {actionButton.dialog}
           </Dialog>
+            )
+          ) : (
+            actionButton
+          )
         )}
       </div>
     </AppHeader>

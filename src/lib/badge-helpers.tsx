@@ -28,22 +28,41 @@ export const getStockOutStatusBadge = (status: string) => {
 };
 
 export const getPurchaseRequestStatusBadge = (status: string) => {
+  // For rejected status, use explicit styling with direct Tailwind colors to ensure text is visible
+  // Match the pattern used in getPriorityBadge for consistent styling
+  if (status === PR_STATUS.REJECTED || status === "rejected") {
+    return (
+      <Badge className="bg-red-500 text-white border-transparent" variant="default">
+        REJECTED
+      </Badge>
+    );
+  }
+  
   const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
     [PR_STATUS.DRAFT]: "outline",
     [PR_STATUS.PENDING]: "secondary",
     [PR_STATUS.APPROVED]: "default",
-    [PR_STATUS.REJECTED]: "destructive",
     [PR_STATUS.CANCELLED]: "outline",
   };
+  
   return <Badge variant={variants[status] || "outline"}>{status.toUpperCase()}</Badge>;
 };
 
 export const getGoodsReceiptStatusBadge = (status: string) => {
+  // For rejected status, use explicit styling with direct Tailwind colors to ensure text is visible
+  // Match the pattern used in getPriorityBadge for consistent styling
+  if (status === GR_STATUS.REJECTED || status === "rejected") {
+    return (
+      <Badge className="bg-red-500 text-white border-transparent" variant="default">
+        REJECTED
+      </Badge>
+    );
+  }
+  
   const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
     [GR_STATUS.PENDING]: "outline",
     partial: "secondary",
     complete: "default",
-    [GR_STATUS.REJECTED]: "destructive",
   };
   return <Badge variant={variants[status] || "outline"}>{status.toUpperCase()}</Badge>;
 };

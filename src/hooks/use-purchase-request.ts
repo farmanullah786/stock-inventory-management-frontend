@@ -5,6 +5,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 import { closeDialog } from "@/components/ui/dialog";
 import { purchaseRequestServices } from "@/services/purchase-request-services";
 import { QueryParams, MutationResponse } from "@/types";
@@ -39,6 +40,7 @@ export const useFetchPurchaseRequest = (id: number) =>
 // MUTATIONS
 export const useCreatePurchaseRequest = () => {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   return useMutation({
     mutationFn: purchaseRequestServices.addPurchaseRequest,
@@ -47,13 +49,14 @@ export const useCreatePurchaseRequest = () => {
         queryKey: purchaseRequestKeys.all,
       });
       toast.success(data.message);
-      closeDialog();
+      navigate("/purchase-requests");
     },
   });
 };
 
 export const useUpdatePurchaseRequest = () => {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   return useMutation({
     mutationFn: purchaseRequestServices.updatePurchaseRequest,
@@ -62,7 +65,7 @@ export const useUpdatePurchaseRequest = () => {
         queryKey: purchaseRequestKeys.all,
       });
       toast.success(data.message);
-      closeDialog();
+      navigate("/purchase-requests");
     },
   });
 };

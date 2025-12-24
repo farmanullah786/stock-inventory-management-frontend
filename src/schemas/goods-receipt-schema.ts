@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const goodsReceiptItemSchema = z.object({
-  productId: z.number().min(1, { message: "Product is required." }),
+  productName: z.string().min(1, { message: "Product name is required." }),
   quantityReceived: z.coerce.number().min(0, { message: "Quantity received cannot be negative." }),
   quantityExpected: z.coerce.number().min(0.01, { message: "Quantity expected must be greater than 0." }),
   condition: z.enum(["good", "damaged", "missing", "expired"]).optional(),

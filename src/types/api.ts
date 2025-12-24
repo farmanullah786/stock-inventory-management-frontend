@@ -113,7 +113,7 @@ export type IUser = BaseEntity & {
 
 export type IPurchaseRequestItem = BaseEntity & {
   purchaseRequestId: number;
-  productId: number;
+  productName: string; // Required - manual product name entry
   quantity: number;
   quantityReceived?: number;
   unitPrice?: number;
@@ -121,7 +121,6 @@ export type IPurchaseRequestItem = BaseEntity & {
   currency?: string;
   justification?: string;
   specifications?: string;
-  product?: IProduct;
 };
 
 export type IPurchaseRequest = BaseEntity & {
@@ -151,7 +150,8 @@ export type IPurchaseRequest = BaseEntity & {
 
 export type IGoodsReceiptItem = BaseEntity & {
   goodsReceiptId: number;
-  productId: number;
+  productName: string; // Product name from PR - required
+  productId?: number | null; // Product ID - nullable, set when product exists
   quantityReceived: number;
   quantityExpected: number;
   condition: "good" | "damaged" | "missing" | "expired";

@@ -5,10 +5,11 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { closeDialog } from "@/components/ui/dialog";
+import { useNavigate } from "react-router-dom";
 import { goodsReceiptServices } from "@/services/goods-receipt-services";
 import { QueryParams, MutationResponse } from "@/types";
 import { IGoodsReceipt } from "@/types/api";
+import { routesConfig } from "@/config/routes-config";
 
 // QUERY KEYS
 export const goodsReceiptKeys = {
@@ -36,9 +37,18 @@ export const useFetchGoodsReceipt = (id: number) =>
     enabled: !!id,
   });
 
+export const useFetchGoodsReceiptByGrn = (grnNumber: string, enabled: boolean = true) =>
+  useQuery({
+    queryKey: [{ scope: "GOODS_RECEIPT", entity: "byGrn", grnNumber }],
+    queryFn: () => goodsReceiptServices.fetchGoodsReceiptByGrn(grnNumber),
+    select: (data) => data.data,
+    enabled: enabled && !!grnNumber && grnNumber.trim().length > 0,
+  });
+
 // MUTATIONS
 export const useCreateGoodsReceipt = () => {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   return useMutation({
     mutationFn: goodsReceiptServices.addGoodsReceipt,
@@ -50,13 +60,14 @@ export const useCreateGoodsReceipt = () => {
         queryKey: [{ scope: "STOCK_IN" }],
       });
       toast.success(data.message);
-      closeDialog();
+      navigate(routesConfig.app.goodsReceipts);
     },
   });
 };
 
 export const useUpdateGoodsReceipt = () => {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   return useMutation({
     mutationFn: goodsReceiptServices.updateGoodsReceipt,
@@ -68,7 +79,7 @@ export const useUpdateGoodsReceipt = () => {
         queryKey: [{ scope: "STOCK_IN" }],
       });
       toast.success(data.message);
-      closeDialog();
+      navigate(routesConfig.app.goodsReceipts);
     },
   });
 };
@@ -106,7 +117,6 @@ export const useVerifyGoodsReceipt = () => {
         queryKey: [{ scope: "STOCK_SUMMARY" }],
       });
       toast.success(data.message);
-      closeDialog();
     },
   });
 };

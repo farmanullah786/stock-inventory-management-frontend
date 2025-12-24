@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const purchaseRequestItemSchema = z.object({
-  productId: z.number().min(1, { message: "Product is required." }),
+  productName: z.string().min(1, { message: "Product name is required." }), // Manual product name entry (required)
   quantity: z.coerce.number().min(0.01, { message: "Quantity must be greater than 0." }),
   unitPrice: z.coerce.number().min(0, { message: "Unit price must be 0 or greater." }).optional(),
   totalPrice: z.coerce.number().min(0, { message: "Total price must be 0 or greater." }).optional(),

@@ -18,6 +18,9 @@ export const goodsReceiptServices = {
     MutationResponse<IGoodsReceipt>
   > => apiClient.get(`goods-receipts/${id}`),
 
+  fetchGoodsReceiptByGrn: (grnNumber: string): Promise<MutationResponse<IGoodsReceipt>> =>
+    apiClient.get(`goods-receipts/by-grn/${grnNumber}`),
+
   addGoodsReceipt: (data: GoodsReceiptFormData): Promise<MutationResponse<IGoodsReceipt>> =>
     apiClient.post("goods-receipts", data),
 

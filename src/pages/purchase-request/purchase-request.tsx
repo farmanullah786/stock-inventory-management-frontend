@@ -3,7 +3,6 @@ import { useFetchPurchaseRequests } from "@/hooks/use-purchase-request";
 import { useFetchProducts } from "@/hooks/use-products";
 import { useFetchUsers } from "@/hooks/use-user";
 import { useUser } from "@/store/use-user-store";
-import PurchaseRequestFormDialog from "../../components/purchase-request-form/purchase-request-form";
 import { canModifyInventory } from "@/lib/utils";
 import { purchaseRequestColumns } from "@/components/purchase-request/columns";
 import { usePaginationQuery } from "@/hooks/use-pagination-query";
@@ -23,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 
 const PurchaseRequest = () => {
   const { searchParams, setSearchParams, queryOptions } = usePaginationQuery();
@@ -45,14 +44,14 @@ const PurchaseRequest = () => {
   const users = usersQuery.isSuccess ? usersQuery.data.data : [];
 
   const columns = useMemo(
-    () => purchaseRequestColumns(products, users, user.role),
-    [products, users, user.role]
+    () => purchaseRequestColumns(users, user),
+    [users, user]
   );
 
   if (isError) {
     return (
       <>
-        <Header products={products} users={users} />
+        <Header />
         <Container>
           <ErrorDisplay
             error={error}
@@ -66,7 +65,7 @@ const PurchaseRequest = () => {
 
   return (
     <>
-      <Header products={products} users={users} />
+      <Header />
       <Container>
         <div className="space-y-4">
           <PurchaseRequest.Filters />
@@ -148,14 +147,9 @@ PurchaseRequest.Filters = () => {
   );
 };
 
-const Header = ({
-  products,
-  users,
-}: {
-  products: IProduct[];
-  users: IUser[];
-}) => {
+const Header = () => {
   const { user } = useUser();
+  const navigate = useNavigate();
   return (
     <PageHeader
       title="Purchase Requests"
@@ -163,13 +157,7 @@ const Header = ({
         canModifyInventory(user?.role)
           ? {
               label: "Create Purchase Request",
-              dialog: (
-                <PurchaseRequestFormDialog
-                  action="create"
-                  products={products}
-                  users={users}
-                />
-              ),
+              onClick: () => navigate("/purchase-requests/create"),
             }
           : undefined
       }

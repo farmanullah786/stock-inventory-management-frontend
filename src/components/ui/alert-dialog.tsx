@@ -57,6 +57,20 @@ const AlertDialogHeader = ({
 );
 AlertDialogHeader.displayName = "AlertDialogHeader";
 
+const AlertDialogBody = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => (
+  <div
+    className={cn(
+      "flex-1 overflow-y-auto px-6 py-4",
+      className
+    )}
+    {...props}
+  />
+);
+AlertDialogBody.displayName = "AlertDialogBody";
+
 const AlertDialogFooter = ({
   className,
   ...props
@@ -131,6 +145,7 @@ export {
   AlertDialogTrigger,
   AlertDialogContent,
   AlertDialogHeader,
+  AlertDialogBody,
   AlertDialogFooter,
   AlertDialogTitle,
   AlertDialogDescription,

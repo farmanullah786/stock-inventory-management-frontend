@@ -1,9 +1,7 @@
 import { useMemo } from "react";
 import { useFetchGoodsReceipts } from "@/hooks/use-goods-receipt";
-import { useFetchProducts } from "@/hooks/use-products";
 import { useFetchUsers } from "@/hooks/use-user";
 import { useUser } from "@/store/use-user-store";
-import GoodsReceiptFormDialog from "../../components/goods-receipt-form/goods-receipt-form";
 import { canModifyInventory } from "@/lib/utils";
 import { goodsReceiptColumns } from "@/components/goods-receipt/columns";
 import { usePaginationQuery } from "@/hooks/use-pagination-query";
@@ -15,7 +13,7 @@ import { Container } from "@/components/shared/container";
 import { ServerDataTable } from "@/components/shared/data-table/server-data-table";
 import { ErrorDisplay } from "@/components/shared/error-display";
 import { TableSkeleton } from "@/components/shared/table-skeleton";
-import { IProduct, IUser } from "@/types/api";
+import { IUser } from "@/types/api";
 import {
   Select,
   SelectContent,
@@ -23,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 
 const GoodsReceipt = () => {
   const { searchParams, setSearchParams, queryOptions } = usePaginationQuery();
@@ -37,22 +35,20 @@ const GoodsReceipt = () => {
     isError,
     error,
   } = useFetchGoodsReceipts(queryOptions);
-  const productsQuery = useFetchProducts();
   const usersQuery = useFetchUsers({ page: 1, limit: 1000 });
 
   // Extract data arrays once
-  const products = productsQuery.isSuccess ? productsQuery.data.data : [];
   const users = usersQuery.isSuccess ? usersQuery.data.data : [];
 
   const columns = useMemo(
-    () => goodsReceiptColumns(products, users, user.role),
-    [products, users, user.role]
+    () => goodsReceiptColumns(users, user),
+    [users, user]
   );
 
   if (isError) {
     return (
       <>
-        <Header products={products} users={users} />
+        <Header />
         <Container>
           <ErrorDisplay
             error={error}
@@ -66,7 +62,7 @@ const GoodsReceipt = () => {
 
   return (
     <>
-      <Header products={products} users={users} />
+      <Header />
       <Container>
         <div className="space-y-4">
           <GoodsReceipt.Filters />
@@ -123,28 +119,17 @@ GoodsReceipt.Filters = () => {
   );
 };
 
-const Header = ({
-  products,
-  users,
-}: {
-  products: IProduct[];
-  users: IUser[];
-}) => {
+const Header = () => {
   const { user } = useUser();
+  const navigate = useNavigate();
   return (
     <PageHeader
-      title="Goods Receipt"
+      title="Goods Receipts"
       actionButton={
         canModifyInventory(user?.role)
           ? {
               label: "Create Goods Receipt",
-              dialog: (
-                <GoodsReceiptFormDialog
-                  action="create"
-                  products={products}
-                  users={users}
-                />
-              ),
+              onClick: () => navigate("/goods-receipts/create"),
             }
           : undefined
       }

@@ -10,11 +10,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { IGoodsReceipt, IProduct, IUser } from "@/types/api";
+import { IGoodsReceipt, IUser } from "@/types/api";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { DataTableColumnHeader } from "../shared/data-table/data-table-column-header";
-import GoodsReceiptFormDialog from "../goods-receipt-form/goods-receipt-form";
+import { GoodsReceiptActions } from "./goods-receipt-actions";
 import {
   canDelete,
   canModifyInventory,
@@ -28,25 +28,21 @@ import {
 import { DeleteGoodsReceiptAlert } from "./delete-goods-receipt-alert";
 import { IDialogType } from "@/types";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { routesConfig } from "@/config/routes-config";
 
 export const goodsReceiptColumns = (
-  products: IProduct[] = [],
   users: IUser[] = [],
-  userRole: string
+  currentUser: IUser | null
 ): ColumnDef<IGoodsReceipt>[] => {
-  const canEdit = canModifyInventory(userRole);
-  const canDeleteGR = canDelete(userRole);
-  const canVerify = isAdminOrManager(userRole);
-  const showActions = canEdit || canDeleteGR || canVerify;
+  const canEdit = currentUser ? canModifyInventory(currentUser.role) : false;
+  const canDeleteGR = currentUser ? canDelete(currentUser.role) : false;
+  const canVerify = currentUser ? isAdminOrManager(currentUser.role) : false;
+  // Show "Received By" column only for Admins and Managers (who see all receipts)
+  // Hide for Stock Keepers (who only see their own receipts)
+  const showReceiverColumn = currentUser ? isAdminOrManager(currentUser.role) : false;
 
   const columns: ColumnDef<IGoodsReceipt>[] = [
-    {
-      accessorKey: "id",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="ID" className="min-w-5" />
-      ),
-      maxSize: 40,
-    },
     {
       accessorKey: "grnNumber",
       header: ({ column }) => (
@@ -68,20 +64,6 @@ export const goodsReceiptColumns = (
         if (!pr) return "-";
         return pr.prNumber;
       },
-      // cell: ({ row }) => {
-      //   const pr = row.original.purchaseRequest;
-      //   if (!pr) return "-";
-      //   return (
-      //     <div className="flex items-center gap-2">
-      //       <span>{pr.prNumber}</span>
-      //       {pr.items && pr.items.some((item) => (item.quantityReceived || 0) > 0) && (
-      //         <Badge variant="outline" className="text-xs">
-      //           Partial
-      //         </Badge>
-      //       )}
-      //     </div>
-      //   );
-      // },
     },
     {
       accessorKey: "status",
@@ -89,6 +71,35 @@ export const goodsReceiptColumns = (
         <DataTableColumnHeader column={column} title="Status" />
       ),
       cell: ({ row }) => getGoodsReceiptStatusBadge(row.original.status),
+    },
+    {
+      accessorKey: "verifiedBy",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Verified" />
+      ),
+      cell: ({ row }) => {
+        const verified = row.original.verifiedBy;
+        return verified ? (
+          <Badge variant="default" className="bg-green-500 text-white border-transparent">
+            Verified
+          </Badge>
+        ) : (
+          <Badge variant="outline" className="text-gray-600">
+            Not Verified
+          </Badge>
+        );
+      },
+    },
+    {
+      accessorKey: "verifier",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Verified By" />
+      ),
+      cell: ({ row }) => {
+        const verifier = row.original.verifier;
+        if (!verifier) return "-";
+        return `${verifier.firstName} ${verifier.lastName || ""}`.trim();
+      },
     },
     {
       accessorKey: "condition",
@@ -104,7 +115,11 @@ export const goodsReceiptColumns = (
       ),
       cell: ({ row }) => formatDate(row.original.receivedDate),
     },
-    {
+  ];
+
+  // Conditionally add "Received By" column only for Admins and Managers
+  if (showReceiverColumn) {
+    columns.push({
       accessorKey: "receiver",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Received By" />
@@ -114,76 +129,93 @@ export const goodsReceiptColumns = (
         if (!receiver) return "-";
         return `${receiver.firstName} ${receiver.lastName || ""}`.trim();
       },
-    },
-    {
-      accessorKey: "items",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Items" />
-      ),
-      cell: ({ row }) => {
-        const items = row.original.items || [];
-        return items.length;
-      },
-    },
-  ];
-
-  if (showActions) {
-    columns.push({
-      id: "actions",
-      header: ({ column }) => (
-        <DataTableColumnHeader
-          column={column}
-          title=""
-          className="min-w-[3rem]"
-        />
-      ),
-      cell: ({ row }) => (
-        <ActionsRow
-          record={row.original}
-          products={products}
-          users={users}
-          canEdit={canEdit}
-          canDelete={canDeleteGR}
-          canVerify={canVerify}
-        />
-      ),
-      maxSize: 30,
     });
   }
+
+  columns.push({
+    accessorKey: "items",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Items" />
+    ),
+    cell: ({ row }) => {
+      const items = row.original.items || [];
+      return items.length;
+    },
+  });
+
+  // Always add actions column so users can view details
+  columns.push({
+    id: "actions",
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title=""
+        className="min-w-[3rem]"
+      />
+    ),
+    cell: ({ row }) => (
+      <ActionsRow
+        record={row.original}
+        users={users}
+        canEdit={canEdit}
+        canDelete={canDeleteGR}
+        canVerify={canVerify}
+        currentUser={currentUser}
+      />
+    ),
+    maxSize: 30,
+  });
 
   return columns;
 };
 
 const ActionsRow = ({
   record,
-  products,
   users,
   canEdit,
   canDelete: canDeleteGR,
   canVerify,
+  currentUser,
 }: {
   record: IGoodsReceipt;
-  products: IProduct[];
   users: IUser[];
   canEdit: boolean;
   canDelete: boolean;
   canVerify: boolean;
+  currentUser: IUser | null;
 }) => {
   const [dialogType, setDialogType] = useState<IDialogType>("None");
+  const navigate = useNavigate();
 
   const handleDialogType = (type: IDialogType) => setDialogType(type);
 
-  const hasAnyAction = canEdit || canDeleteGR || canVerify;
-  if (!hasAnyAction) return null;
+  const handleEdit = () => {
+    navigate(
+      `${routesConfig.app.editGoodsReceipt.replace(
+        ":id",
+        record.id.toString()
+      )}`
+    );
+  };
 
+
+  // Only the creator (receiver/owner) can edit their own goods receipt, and only when not verified
   const canUpdate =
-    (record.status === "pending" || record.status === "partial") && canEdit;
+    canEdit &&
+    currentUser &&
+    record.receivedBy === currentUser.id &&
+    !record.verifiedBy; // Cannot edit if already verified
   const canVerifyGR =
     record.status !== "rejected" && !record.verifiedBy && canVerify;
+  // Only the creator (receiver) can delete their own goods receipt
   const canDeleteRecord =
-    (record.status === "pending" || record.status === "rejected") &&
-    canDeleteGR;
+    record.status === "pending" &&
+    canDeleteGR &&
+    currentUser &&
+    record.receivedBy === currentUser.id;
 
+  // Always show actions menu since "View Details" should always be available
+  // Other actions are conditionally shown inside the menu
   return (
     <Dialog>
       <AlertDialog>
@@ -197,12 +229,20 @@ const ActionsRow = ({
           <DropdownMenuContent align="end" className="w-40">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() =>
+                navigate(
+                  `${routesConfig.app.goodsReceiptDetail.replace(
+                    ":id",
+                    record.id.toString()
+                  )}`
+                )
+              }
+            >
+              View Details
+            </DropdownMenuItem>
             {canUpdate && (
-              <DialogTrigger asChild>
-                <DropdownMenuItem onClick={() => handleDialogType("Update")}>
-                  Edit
-                </DropdownMenuItem>
-              </DialogTrigger>
+              <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
             )}
             {canVerifyGR && (
               <DialogTrigger asChild>
@@ -215,7 +255,7 @@ const ActionsRow = ({
               <>
                 <DropdownMenuSeparator />
                 <AlertDialogTrigger asChild>
-                  <DropdownMenuItem onClick={() => handleDialogType("Delete")}>
+                  <DropdownMenuItem className="text-primary" onClick={() => handleDialogType("Delete")}>
                     Delete
                   </DropdownMenuItem>
                 </AlertDialogTrigger>
@@ -227,21 +267,8 @@ const ActionsRow = ({
           <DeleteGoodsReceiptAlert goodsReceiptId={record.id} />
         )}
       </AlertDialog>
-      {dialogType === "Update" && (
-        <GoodsReceiptFormDialog
-          action="update"
-          goodsReceipt={record}
-          products={products}
-          users={users}
-        />
-      )}
-      {dialogType === "Verify" && (
-        <GoodsReceiptFormDialog
-          action="verify"
-          goodsReceipt={record}
-          products={products}
-          users={users}
-        />
+      {dialogType === "Verify" && canVerifyGR && (
+        <GoodsReceiptActions goodsReceipt={record} />
       )}
     </Dialog>
   );

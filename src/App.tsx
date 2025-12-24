@@ -24,7 +24,13 @@ import ProductManagement from "./pages/product-management/product-management.tsx
 import Settings from "./pages/settings/settings.tsx";
 import Users from "./pages/users/users";
 import PurchaseRequest from "./pages/purchase-request/purchase-request";
+import CreatePurchaseRequest from "./pages/purchase-request/create-purchase-request";
+import EditPurchaseRequest from "./pages/purchase-request/edit-purchase-request";
+import PurchaseRequestDetail from "./pages/purchase-request/purchase-request-detail";
 import GoodsReceipt from "./pages/goods-receipt/goods-receipt";
+import CreateGoodsReceipt from "./pages/goods-receipt/create-goods-receipt";
+import EditGoodsReceipt from "./pages/goods-receipt/edit-goods-receipt";
+import GoodsReceiptDetail from "./pages/goods-receipt/goods-receipt-detail";
 import Login from "./pages/auth/login";
 import ForgotPassword from "./pages/auth/forgot-password";
 import ResetPassword from "./pages/auth/reset-password";
@@ -74,8 +80,32 @@ const router = createBrowserRouter([
         element: <PurchaseRequest />,
       },
       {
+        path: getPathSegment(routesConfig.app.createPurchaseRequest),
+        element: <CreatePurchaseRequest />,
+      },
+      {
+        path: getPathSegment(routesConfig.app.editPurchaseRequest),
+        element: <EditPurchaseRequest />,
+      },
+      {
+        path: getPathSegment(routesConfig.app.purchaseRequestDetail),
+        element: <PurchaseRequestDetail />,
+      },
+      {
         path: getPathSegment(routesConfig.app.goodsReceipts),
         element: <GoodsReceipt />,
+      },
+      {
+        path: getPathSegment(routesConfig.app.createGoodsReceipt),
+        element: <CreateGoodsReceipt />,
+      },
+      {
+        path: getPathSegment(routesConfig.app.editGoodsReceipt),
+        element: <EditGoodsReceipt />,
+      },
+      {
+        path: getPathSegment(routesConfig.app.goodsReceiptDetail),
+        element: <GoodsReceiptDetail />,
       },
       {
         path: getPathSegment(routesConfig.app.categories),

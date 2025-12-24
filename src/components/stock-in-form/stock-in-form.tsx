@@ -33,6 +33,8 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { useAddStockIn, useUpdateStockIn } from "@/hooks/use-stock-in";
 import { useUser } from "@/store/use-user-store";
 import { ROLES, STOCK_IN_STATUS, DEFAULT_CURRENCY, CURRENCIES } from "@/constants";
+import { useFetchGoodsReceiptByGrn } from "@/hooks/use-goods-receipt";
+import { useEffect } from "react";
 
 const content = {
   create: {
@@ -99,6 +101,41 @@ export function StockInFormDialog(props: StockInFormProps) {
 
   const addMutation = useAddStockIn();
   const updateMutation = useUpdateStockIn();
+
+  // Watch GRN number for auto-population (only in create mode)
+  const grnNo = form.watch("grnNo");
+  const { data: goodsReceipt, isLoading: isLoadingGR } = useFetchGoodsReceiptByGrn(
+    grnNo || "",
+    action === "create" && !!grnNo && grnNo.trim().length > 0
+  );
+
+  // Auto-populate fields when GR is fetched
+  useEffect(() => {
+    if (action === "create" && goodsReceipt && !isLoadingGR) {
+      // Get the first item from GR (for single product Stock In entry)
+      // In a real scenario, you might want to handle multiple items differently
+      const firstItem = goodsReceipt.items?.[0];
+      if (firstItem) {
+        const prItem = goodsReceipt.purchaseRequest?.items?.find(
+          (item) => item.productId === firstItem.productId
+        );
+
+        // Auto-populate fields from GR
+        form.setValue("productId", firstItem.productId);
+        form.setValue("date", goodsReceipt.receivedDate);
+        form.setValue("quantity", firstItem.quantityReceived || firstItem.quantityExpected || 0);
+        form.setValue("unitPrice", prItem?.unitPrice || 0);
+        form.setValue("currency", goodsReceipt.purchaseRequest?.currency || DEFAULT_CURRENCY);
+        form.setValue("poNumber", goodsReceipt.purchaseRequest?.prNumber || "");
+        form.setValue("stockKeeperId", goodsReceipt.receivedBy);
+
+        // Calculate total price
+        const qty = firstItem.quantityReceived || firstItem.quantityExpected || 0;
+        const price = prItem?.unitPrice || 0;
+        form.setValue("totalPrice", qty * price);
+      }
+    }
+  }, [goodsReceipt, isLoadingGR, action, form]);
 
   const onSubmit = async (data: StockInFormData) => {
     // Calculate totalPrice if unitPrice and quantity are provided
@@ -359,11 +396,17 @@ export function StockInFormDialog(props: StockInFormProps) {
                       <FormLabel>GRN N/O</FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder="GRN Number" 
+                          placeholder="Enter GRN Number to auto-populate fields" 
                           {...field} 
                           disabled={isReadOnly || (action === "update" && props.purchaseRequestId)} 
                         />
                       </FormControl>
+                      {isLoadingGR && action === "create" && (
+                        <p className="text-sm text-muted-foreground">Loading GR details...</p>
+                      )}
+                      {goodsReceipt && action === "create" && !isLoadingGR && (
+                        <p className="text-sm text-green-600">Fields auto-populated from GR</p>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
