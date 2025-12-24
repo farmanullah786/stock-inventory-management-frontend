@@ -252,8 +252,7 @@ const ActionsRow = ({
   };
 
   const canDeleteRecord =
-    (record.status === "draft" ||
-      record.status === "validated" ||
+    (record.status === "validated" ||
       record.status === "cancelled") &&
     canDeleteStockIn;
 

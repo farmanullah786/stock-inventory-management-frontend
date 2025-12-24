@@ -4,8 +4,9 @@ import { useFetchProducts } from "@/hooks/use-products";
 import { useFetchUsers } from "@/hooks/use-user";
 import { useFetchStockSummary } from "@/hooks/use-stock-summary";
 import { useUser } from "@/store/use-user-store";
-import StockOutFormDialog from "../../components/stock-out-form/stock-out-form";
 import { canModifyInventory } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
+import { routesConfig } from "@/config/routes-config";
 import { stockOutColumns } from "@/components/stock-out/columns";
 import { usePaginationQuery } from "@/hooks/use-pagination-query";
 import { PageHeader } from "@/components/shared/page-header";
@@ -119,6 +120,8 @@ const Header = ({
   users: IUser[];
 }) => {
   const { user } = useUser();
+  const navigate = useNavigate();
+
   return (
     <PageHeader
       title="Stock Out"
@@ -126,13 +129,7 @@ const Header = ({
         canModifyInventory(user?.role)
           ? {
               label: "Add Stock Out",
-              dialog: (
-                <StockOutFormDialog
-                  action="create"
-                  products={products}
-                  users={users}
-                />
-              ),
+              onClick: () => navigate(routesConfig.app.createStockOut),
             }
           : undefined
       }

@@ -39,7 +39,7 @@ export type IStockIn = BaseEntity & {
   referenceNumber?: string;
   // location removed - not used in form/workflow
   // scheduledDate removed - not used in form/workflow
-  status?: "draft" | "validated" | "done" | "cancelled";
+  status?: "validated" | "done" | "cancelled";
   remarks?: string;
   product?: IProduct;
   goodsReceipt?: IGoodsReceipt;

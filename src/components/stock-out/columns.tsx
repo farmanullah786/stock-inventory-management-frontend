@@ -11,11 +11,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { IStockOut, IProduct, IUser } from "@/types/api";
-import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { DataTableColumnHeader } from "../shared/data-table/data-table-column-header";
-import StockOutFormDialog from "../stock-out-form/stock-out-form";
-import { canDelete, canModifyInventory, formatDate, isAdminOrManager } from "@/lib/utils";
+import { canDelete, formatDate, isAdminOrManager } from "@/lib/utils";
 import { getStockOutStatusBadge } from "@/lib/badge-helpers";
 import { DeleteStockOutAlert } from "./delete-stock-out-alert";
 import { IDialogType } from "@/types";
@@ -23,6 +22,8 @@ import { useState } from "react";
 import { TruncatedText } from "../shared/truncated-text";
 import { CreatorCell } from "../shared/creator-cell";
 import { useValidateStockOut } from "@/hooks/use-stock-out";
+import { useNavigate } from "react-router-dom";
+import { routesConfig } from "@/config/routes-config";
 import {
   DialogClose,
   DialogContent,
@@ -39,10 +40,9 @@ export const stockOutColumns = (
   users: IUser[] = [],
   userRole: string
 ): ColumnDef<IStockOut>[] => {
-  const canEdit = canModifyInventory(userRole);
   const canDeleteStockOut = canDelete(userRole);
   const canValidate = isAdminOrManager(userRole);
-  const showActions = canEdit || canDeleteStockOut || canValidate;
+  const showActions = canDeleteStockOut || canValidate;
 
   const columns: ColumnDef<IStockOut>[] = [
     {
@@ -177,7 +177,6 @@ export const stockOutColumns = (
           record={row.original}
           products={products}
           users={users}
-          canEdit={canEdit}
           canDelete={canDeleteStockOut}
           canValidate={canValidate}
         />
@@ -239,28 +238,30 @@ const ActionsRow = ({
   record,
   products,
   users,
-  canEdit,
   canDelete: canDeleteStockOut,
   canValidate,
 }: {
   record: IStockOut;
   products: IProduct[];
   users: IUser[];
-  canEdit: boolean;
   canDelete: boolean;
   canValidate: boolean;
 }) => {
+  const navigate = useNavigate();
   const [dialogType, setDialogType] = useState<IDialogType>("None");
 
   const handleDialogType = (type: IDialogType) => setDialogType(type);
 
-  const hasAnyAction = canEdit || canDeleteStockOut || canValidate;
-  if (!hasAnyAction) return null;
+  const handleViewDetails = () => {
+    navigate(
+      `${routesConfig.app.stockOutDetail.replace(":id", record.id.toString())}`
+    );
+  };
 
-  const canUpdate = (record.status === "draft" || record.status === "ready") && canEdit;
   const canValidateRecord = (record.status === "draft" || record.status === "ready") && !record.validatedBy && canValidate;
   const canDeleteRecord = (record.status === "draft" || record.status === "ready") && canDeleteStockOut;
 
+  // Always show actions menu since "View Details" should always be available
   return (
     <Dialog>
       <AlertDialog>
@@ -275,13 +276,9 @@ const ActionsRow = ({
           <DropdownMenuContent align="end" className="w-40">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {canUpdate && (
-              <DialogTrigger asChild>
-                <DropdownMenuItem onClick={() => handleDialogType("Update")}>
-                  Edit
-                </DropdownMenuItem>
-              </DialogTrigger>
-            )}
+            <DropdownMenuItem onClick={handleViewDetails}>
+              View Details
+            </DropdownMenuItem>
             {canValidateRecord && (
               <DialogTrigger asChild>
                 <DropdownMenuItem onClick={() => handleDialogType("Validate")}>
@@ -302,32 +299,10 @@ const ActionsRow = ({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {dialogType === "Delete" && canDeleteStockOut && (
+        {dialogType === "Delete" && canDeleteRecord && (
           <DeleteStockOutAlert stockOutId={record.id} />
         )}
       </AlertDialog>
-      {dialogType === "Update" && (
-        <StockOutFormDialog
-          action="update"
-          stockOut={{
-            productId: record.productId || record.product.id,
-            date: record.date,
-            quantity: record.quantity,
-            issuedToId: record.issuedToId,
-            site: record.site,
-            technicianId: record.technicianId,
-            status: record.status,
-            location: record.location || "",
-            scheduledDate: record.scheduledDate || undefined,
-            requestNumber: record.requestNumber || "",
-            destinationDocument: record.destinationDocument || "",
-            remarks: record.remarks,
-          }}
-          stockOutId={record.id}
-          products={products}
-          users={users}
-        />
-      )}
       {dialogType === "Validate" && (
         <ValidateStockOutDialog stockOutId={record.id} record={record} />
       )}

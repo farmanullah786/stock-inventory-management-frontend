@@ -86,6 +86,7 @@ export const useDeleteProduct = () => {
         queryKey: [{ scope: "STOCK_SUMMARY" }],
       });
       toast.success(data.message || "Product deleted successfully");
+      closeDialog();
     },
   });
 };

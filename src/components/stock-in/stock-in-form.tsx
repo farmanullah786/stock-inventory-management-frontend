@@ -78,11 +78,8 @@ const StockInForm = (props: StockInFormProps) => {
   });
   const goodsReceipts = goodsReceiptsData?.data || [];
 
-  // Set default status based on user role
-  const defaultStatus: "draft" | "validated" =
-    user.role === ROLES.STOCK_KEEPER
-      ? STOCK_IN_STATUS.DRAFT
-      : STOCK_IN_STATUS.VALIDATED;
+  // Set default status - always validated
+  const defaultStatus: "validated" = STOCK_IN_STATUS.VALIDATED;
 
   const formDefaultValues = {
     ...(action === "create" ? defaultValues : defaultUpdateValues),

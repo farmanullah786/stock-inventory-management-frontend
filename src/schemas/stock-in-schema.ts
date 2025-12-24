@@ -21,7 +21,7 @@ export const stockInItemSchema = z.object({
 export const stockInSchema = z.object({
   goodsReceiptId: z.number().min(1, { message: "Goods Receipt is required." }), // Required - Stock In associated with GR ID
   items: z.array(stockInItemSchema).min(1, { message: "At least one item is required." }), // Array of items, one per GR item
-  status: z.enum(["draft", "validated", "done", "cancelled"]).optional(),
+  status: z.enum(["validated", "done", "cancelled"]).optional(),
   // Removed optional fields not used in form:
   // - location, scheduledDate, year, month (auto-calculated by backend)
 });
@@ -35,7 +35,7 @@ export const stockInUpdateSchema = z.object({
   stockKeeperId: z.number().optional(),
   // currency removed - comes from PR (auto-populated by backend)
   remarks: z.string().optional(),
-  status: z.enum(["draft", "validated", "done", "cancelled"]).optional(),
+  status: z.enum(["validated", "done", "cancelled"]).optional(),
 });
 
 export type StockInFormData = z.infer<typeof stockInSchema>;

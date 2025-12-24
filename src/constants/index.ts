@@ -32,7 +32,6 @@ export const GR_STATUS = {
 
 // Stock In Statuses
 export const STOCK_IN_STATUS = {
-  DRAFT: "draft",
   VALIDATED: "validated",
   DONE: "done",
   CANCELLED: "cancelled",

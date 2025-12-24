@@ -9,7 +9,6 @@ import {
 // Badge helper functions for different status types
 export const getStockInStatusBadge = (status: string) => {
   const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-    [STOCK_IN_STATUS.DRAFT]: "outline",
     [STOCK_IN_STATUS.VALIDATED]: "secondary",
     [STOCK_IN_STATUS.DONE]: "default",
     [STOCK_IN_STATUS.CANCELLED]: "destructive",

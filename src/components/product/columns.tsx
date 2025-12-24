@@ -151,15 +151,28 @@ const ActionsRow = ({
   canDelete: boolean;
 }) => {
   const [dialogType, setDialogType] = useState<IDialogType>("None");
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const handleDialogType = (type: IDialogType) => setDialogType(type);
+  const handleDialogType = (type: IDialogType) => {
+    setDialogType(type);
+    if (type === "Delete") {
+      setIsDeleteDialogOpen(true);
+    }
+  };
+
+  const handleDeleteDialogChange = (open: boolean) => {
+    setIsDeleteDialogOpen(open);
+    if (!open) {
+      setDialogType("None");
+    }
+  };
 
   const hasAnyAction = canEdit || canDeleteProduct;
   if (!hasAnyAction) return null;
 
   return (
     <Dialog>
-      <AlertDialog>
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={handleDeleteDialogChange}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon">

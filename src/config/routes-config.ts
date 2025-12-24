@@ -12,6 +12,8 @@ export const routesConfig = {
     createStockIn: "/stock-in/create",
     stockInDetail: "/stock-in/:id",
     stockOut: "/stock-out",
+    createStockOut: "/stock-out/create",
+    stockOutDetail: "/stock-out/:id",
     purchaseRequests: "/purchase-requests",
     createPurchaseRequest: "/purchase-requests/create",
     editPurchaseRequest: "/purchase-requests/:id/edit",
