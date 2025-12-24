@@ -31,6 +31,8 @@ import GoodsReceipt from "./pages/goods-receipt/goods-receipt";
 import CreateGoodsReceipt from "./pages/goods-receipt/create-goods-receipt";
 import EditGoodsReceipt from "./pages/goods-receipt/edit-goods-receipt";
 import GoodsReceiptDetail from "./pages/goods-receipt/goods-receipt-detail";
+import CreateStockIn from "./pages/stock-in/create-stock-in";
+import StockInDetail from "./pages/stock-in/stock-in-detail";
 import Login from "./pages/auth/login";
 import ForgotPassword from "./pages/auth/forgot-password";
 import ResetPassword from "./pages/auth/reset-password";
@@ -70,6 +72,14 @@ const router = createBrowserRouter([
       {
         path: getPathSegment(routesConfig.app.stockIn),
         element: <StockIn />,
+      },
+      {
+        path: getPathSegment(routesConfig.app.createStockIn),
+        element: <CreateStockIn />,
+      },
+      {
+        path: getPathSegment(routesConfig.app.stockInDetail),
+        element: <StockInDetail />,
       },
       {
         path: getPathSegment(routesConfig.app.stockOut),

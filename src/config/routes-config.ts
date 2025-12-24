@@ -9,6 +9,8 @@ export const routesConfig = {
   app: {
     dashboard: "/",
     stockIn: "/stock-in",
+    createStockIn: "/stock-in/create",
+    stockInDetail: "/stock-in/:id",
     stockOut: "/stock-out",
     purchaseRequests: "/purchase-requests",
     createPurchaseRequest: "/purchase-requests/create",

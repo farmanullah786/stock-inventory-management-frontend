@@ -5,7 +5,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { closeDialog } from "@/components/ui/dialog";
+import { useNavigate } from "react-router-dom";
 import { stockInServices } from "@/services/stock-in-services";
 import { QueryParams, MutationResponse } from "@/types";
 import { IStockIn } from "@/types/api";
@@ -39,6 +39,7 @@ export const useFetchStockIn = (id: number) =>
 // MUTATIONS
 export const useAddStockIn = () => {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   return useMutation({
     mutationFn: stockInServices.addStockIn,
@@ -50,13 +51,14 @@ export const useAddStockIn = () => {
         queryKey: [{ scope: "STOCK_SUMMARY" }],
       });
       toast.success(data.message);
-      closeDialog();
+      navigate("/stock-in");
     },
   });
 };
 
 export const useUpdateStockIn = () => {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   return useMutation({
     mutationFn: stockInServices.updateStockIn,
@@ -68,7 +70,7 @@ export const useUpdateStockIn = () => {
         queryKey: [{ scope: "STOCK_SUMMARY" }],
       });
       toast.success(data.message);
-      closeDialog();
+      navigate("/stock-in");
     },
   });
 };
@@ -90,21 +92,4 @@ export const useDeleteStockIn = () => {
   });
 };
 
-export const useValidateStockIn = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: stockInServices.validateStockIn,
-    onSuccess: (data: MutationResponse<IStockIn>) => {
-      queryClient.invalidateQueries({
-        queryKey: stockInKeys.all,
-      });
-      queryClient.invalidateQueries({
-        queryKey: [{ scope: "STOCK_SUMMARY" }],
-      });
-      toast.success(data.message);
-      closeDialog();
-    },
-  });
-};
 

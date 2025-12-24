@@ -32,8 +32,5 @@ export const stockInServices = {
 
   deleteStockIn: (id: number): Promise<MutationResponse> =>
     apiClient.delete(`stock-in/${id}`),
-
-  validateStockIn: (id: number): Promise<MutationResponse<IStockIn>> =>
-    apiClient.post(`stock-in/${id}/validate`),
 };
 

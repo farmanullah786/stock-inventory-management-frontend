@@ -22,6 +22,7 @@ export type IProduct = BaseEntity & {
 
 export type IStockIn = BaseEntity & {
   productId: number;
+  goodsReceiptId?: number;
   date: string;
   quantity: number;
   unitPrice?: number;
@@ -31,17 +32,17 @@ export type IStockIn = BaseEntity & {
   invoiceNo?: string;
   vendorName?: string;
   grnNo?: string;
-  year?: number;
-  month?: number;
+  // year and month removed - redundant, can be derived from date/createdAt
   stockKeeperId?: number;
   createdBy: number;
-  purchaseRequestId?: number;
+  // purchaseRequestId removed - redundant, can get via goodsReceiptId
   referenceNumber?: string;
-  location?: string;
-  scheduledDate?: string;
+  // location removed - not used in form/workflow
+  // scheduledDate removed - not used in form/workflow
   status?: "draft" | "validated" | "done" | "cancelled";
   remarks?: string;
   product?: IProduct;
+  goodsReceipt?: IGoodsReceipt;
   stockKeeper?: IUser;
   creator?: IUser;
   purchaseRequest?: IPurchaseRequest;

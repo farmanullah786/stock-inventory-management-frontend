@@ -63,6 +63,9 @@ export type QueryParams = {
   status?: string;
   sortBy?: string;
   sortOrder?: "ASC" | "DESC";
+  verified?: boolean | string;
+  purchaseRequestId?: number;
+  grnNumber?: string;
 };
 
 // Re-export API types
