@@ -9,6 +9,7 @@ import { closeDialog } from "@/components/ui/dialog";
 import { productServices } from "@/services/product-services";
 import { QueryParams, MutationResponse } from "@/types";
 import { IProduct } from "@/types/api";
+import { closeAlertDialog } from "@/components/ui/alert-dialog";
 
 // QUERY KEYS
 export const productKeys = {
@@ -87,6 +88,7 @@ export const useDeleteProduct = () => {
       });
       toast.success(data.message || "Product deleted successfully");
       closeDialog();
+      closeAlertDialog()
     },
   });
 };

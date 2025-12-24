@@ -8,6 +8,7 @@ import {
 import { toast } from "sonner";
 import { categoryServices } from "@/services/category-services";
 import { closeDialog } from "@/components/ui/dialog";
+import { closeAlertDialog } from "@/components/ui/alert-dialog";
 
 // QUERY KEYS
 export const categoryKeys = {
@@ -74,6 +75,7 @@ export const useDeleteCategory = () => {
         queryKey: categoryKeys.all,
       });
       toast.success(data.message);
+      closeAlertDialog()
     },
   });
 };

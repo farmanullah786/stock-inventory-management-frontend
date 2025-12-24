@@ -24,9 +24,7 @@ import {
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
-export const productColumns = (
-  userRole: string
-): ColumnDef<IProduct>[] => {
+export const productColumns = (userRole: string): ColumnDef<IProduct>[] => {
   const canEdit = canManageProducts(userRole);
   const canDeleteProduct = canDelete(userRole);
   const showActions = canEdit || canDeleteProduct;
@@ -151,20 +149,9 @@ const ActionsRow = ({
   canDelete: boolean;
 }) => {
   const [dialogType, setDialogType] = useState<IDialogType>("None");
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const handleDialogType = (type: IDialogType) => {
     setDialogType(type);
-    if (type === "Delete") {
-      setIsDeleteDialogOpen(true);
-    }
-  };
-
-  const handleDeleteDialogChange = (open: boolean) => {
-    setIsDeleteDialogOpen(open);
-    if (!open) {
-      setDialogType("None");
-    }
   };
 
   const hasAnyAction = canEdit || canDeleteProduct;
@@ -172,7 +159,7 @@ const ActionsRow = ({
 
   return (
     <Dialog>
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={handleDeleteDialogChange}>
+      <AlertDialog>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon">

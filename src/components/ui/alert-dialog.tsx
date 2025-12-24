@@ -138,6 +138,12 @@ const AlertDialogCancel = React.forwardRef<
 ));
 AlertDialogCancel.displayName = AlertDialogPrimitive.Cancel.displayName;
 
+export const closeAlertDialog = () => {
+  document.getElementById("close-alert-dialog")?.click();
+};
+
+
+
 export {
   AlertDialog,
   AlertDialogPortal,
